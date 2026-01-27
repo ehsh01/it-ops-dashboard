@@ -23,8 +23,8 @@ export default function Login() {
     <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center p-4">
       <div className="w-full max-w-md space-y-8">
         <div className="text-center space-y-2">
-          <div className="w-12 h-12 bg-primary rounded-xl mx-auto flex items-center justify-center mb-4 shadow-lg shadow-primary/20">
-            <ShieldCheck className="w-6 h-6 text-white" />
+          <div className="w-16 h-16 mx-auto flex items-center justify-center mb-4">
+             <img src="/um-logo.png" alt="University of Miami" className="w-full h-full object-contain" />
           </div>
           <h1 className="text-2xl font-bold tracking-tight text-slate-900">
             UM IT Operations

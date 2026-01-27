@@ -25,8 +25,8 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       <aside className="w-64 border-r bg-card flex flex-col fixed h-full z-10">
         <div className="p-6 border-b border-border/40">
           <div className="flex items-center gap-3">
-            <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center text-primary-foreground font-bold">
-              UM
+            <div className="w-8 h-8 flex items-center justify-center font-bold">
+              <img src="/um-logo.png" alt="UM" className="w-full h-full object-contain" />
             </div>
             <div>
               <h1 className="font-semibold tracking-tight text-sm">IT Ops Console</h1>
