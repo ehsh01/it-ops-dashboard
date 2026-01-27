@@ -15,35 +15,67 @@ import {
   Ticket,
   Plus,
   AlertTriangle,
-  Zap
+  Zap,
+  Loader2
 } from "lucide-react";
-import { ActionItem, mockActionItems, Source } from "./mockData";
 import { useToast } from "@/hooks/use-toast";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { useAppState } from "@/lib/context";
-import { useState } from "react";
+import { useEffect } from "react";
+import { useActionItems, useUpdateActionItem, useInitDemoData } from "@/lib/api/queries";
+import type { ActionItem as ActionItemType } from "@shared/schema";
+
+type Source = "ticket" | "email" | "teams" | "calendar";
 
 export function ActionFeed() {
   const { criticalCount, setCriticalCount } = useAppState();
+  const { toast } = useToast();
   
-  // Local state to simulate removing items when action is taken
-  const [removedItems, setRemovedItems] = useState<string[]>([]);
+  const { data: items = [], isLoading, error } = useActionItems();
+  const updateItem = useUpdateActionItem();
+  const initDemo = useInitDemoData();
 
-  const activeItems = mockActionItems
-    .filter(i => i.state === "action_required")
-    .filter(i => !removedItems.includes(i.id));
-    
-  const waitingItems = mockActionItems.filter(i => i.state === "waiting");
-  const infoItems = mockActionItems.filter(i => i.state === "info");
+  const activeItems = items.filter(i => i.state === "action_required");
+  const waitingItems = items.filter(i => i.state === "waiting");
+  const infoItems = items.filter(i => i.state === "info" || i.state === "completed");
 
   // Sync critical count with active items length
-  if (criticalCount !== activeItems.length) {
+  useEffect(() => {
+    if (criticalCount !== activeItems.length) {
       setCriticalCount(activeItems.length);
-  }
+    }
+  }, [activeItems.length, criticalCount, setCriticalCount]);
+
+  // Initialize demo data if no items exist
+  useEffect(() => {
+    if (!isLoading && items.length === 0) {
+      initDemo.mutate();
+    }
+  }, [items.length, isLoading]);
 
   const handleComplete = (id: string) => {
-    setRemovedItems([...removedItems, id]);
+    updateItem.mutate(
+      { id, updates: { state: "completed" } },
+      {
+        onSuccess: () => {
+          toast({
+            title: "Completed",
+            description: "Item marked as complete",
+          });
+        },
+      }
+    );
   };
+
+  if (isLoading) {
+    return (
+      <Card className="border-none shadow-sm h-full flex flex-col bg-white rounded-xl overflow-hidden ring-1 ring-slate-100">
+        <CardContent className="flex items-center justify-center p-12">
+          <Loader2 className="w-8 h-8 animate-spin text-orange-500" />
+        </CardContent>
+      </Card>
+    );
+  }
 
   return (
     <Card className="border-none shadow-sm h-full flex flex-col bg-white rounded-xl overflow-hidden ring-1 ring-slate-100">
@@ -109,7 +141,7 @@ export function ActionFeed() {
   );
 }
 
-function FeedList({ items, type, onComplete }: { items: ActionItem[], type: "focus" | "waiting" | "info", onComplete?: (id: string) => void }) {
+function FeedList({ items, type, onComplete }: { items: ActionItemType[], type: "focus" | "waiting" | "info", onComplete?: (id: string) => void }) {
   if (items.length === 0) {
     return (
       <div className="p-12 text-center text-slate-500 animate-in fade-in zoom-in duration-300">
@@ -131,7 +163,7 @@ function FeedList({ items, type, onComplete }: { items: ActionItem[], type: "foc
   );
 }
 
-function FeedItem({ item, type, index, onComplete }: { item: ActionItem, type: string, index: number, onComplete?: (id: string) => void }) {
+function FeedItem({ item, type, index, onComplete }: { item: ActionItemType, type: string, index: number, onComplete?: (id: string) => void }) {
   const { toast } = useToast();
   const isTopItem = type === "focus" && index === 0;
 
@@ -143,6 +175,20 @@ function FeedItem({ item, type, index, onComplete }: { item: ActionItem, type: s
       title: `${action} applied`,
       description: `Item ${item.id} has been updated.`,
     });
+  };
+
+  // Format timestamp as relative time
+  const getRelativeTime = (date: Date) => {
+    const now = new Date();
+    const diff = now.getTime() - new Date(date).getTime();
+    const minutes = Math.floor(diff / 60000);
+    const hours = Math.floor(diff / 3600000);
+    const days = Math.floor(diff / 86400000);
+
+    if (minutes < 1) return "just now";
+    if (minutes < 60) return `${minutes}m ago`;
+    if (hours < 24) return `${hours}h ago`;
+    return `${days}d ago`;
   };
 
   const getIcon = (source: Source) => {
@@ -179,7 +225,7 @@ function FeedItem({ item, type, index, onComplete }: { item: ActionItem, type: s
     }
   };
 
-  const config = getSourceConfig(item.source);
+  const config = getSourceConfig(item.source as Source);
 
   return (
     <div className={cn(
@@ -192,7 +238,7 @@ function FeedItem({ item, type, index, onComplete }: { item: ActionItem, type: s
       <div className="flex justify-between items-start mb-2 opacity-70 group-hover:opacity-100 transition-opacity">
         <div className="flex items-center gap-2">
           <Badge variant="outline" className={cn("text-[10px] px-1.5 py-0.5 h-5 gap-1.5 font-medium border opacity-75", config.badge)}>
-            {getIcon(item.source)}
+            {getIcon(item.source as Source)}
             {item.id}
           </Badge>
           
@@ -202,7 +248,7 @@ function FeedItem({ item, type, index, onComplete }: { item: ActionItem, type: s
             </span>
           )}
         </div>
-        <span className="text-[10px] font-medium text-slate-400 whitespace-nowrap opacity-75">{item.timestamp}</span>
+        <span className="text-[10px] font-medium text-slate-400 whitespace-nowrap opacity-75">{getRelativeTime(item.createdAt)}</span>
       </div>
 
       {/* Main Content */}
