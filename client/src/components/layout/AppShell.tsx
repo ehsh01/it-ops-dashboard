@@ -28,6 +28,10 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             <div className="w-10 h-10 flex items-center justify-center font-bold">
               <img src="/um-logo.png" alt="UM" className="w-full h-full object-contain" />
             </div>
+            <div>
+              <h1 className="font-bold text-lg text-slate-900 leading-tight">IT Ops Console</h1>
+              <p className="text-sm text-slate-500">Admin: j.doe</p>
+            </div>
           </div>
 
           <nav className="flex-1 space-y-2">
