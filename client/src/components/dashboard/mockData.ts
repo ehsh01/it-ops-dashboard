@@ -26,6 +26,7 @@ export interface ActionItem {
   impact?: string; // Explicit impact statement e.g. "Patient Care Impact"
   slaStatus?: "breaching" | "warning" | "safe";
   waitingOn?: string;
+  nextAction?: string;
 }
 
 export const mockActionItems: ActionItem[] = [
@@ -39,7 +40,8 @@ export const mockActionItems: ActionItem[] = [
     timestamp: "10m ago",
     reason: "Service Degradation (Major)",
     impact: "Clinical Staff Blocking",
-    slaStatus: "breaching"
+    slaStatus: "breaching",
+    nextAction: "Acknowledge & escalate to Network"
   },
   {
     id: "MSG-042",
@@ -51,7 +53,8 @@ export const mockActionItems: ActionItem[] = [
     timestamp: "25m ago",
     sender: "Mike Ross",
     reason: "Direct Mention • Compliance Deadline",
-    impact: "Audit Compliance Risk"
+    impact: "Audit Compliance Risk",
+    nextAction: "Verify logs → reply before 2 PM"
   },
   {
     id: "EMAIL-892",
@@ -63,7 +66,8 @@ export const mockActionItems: ActionItem[] = [
     timestamp: "45m ago",
     sender: "Dr. Sarah Chen",
     reason: "VIP Sender • Access Blocking",
-    impact: "Research Blocker"
+    impact: "Research Blocker",
+    nextAction: "Grant access in AD"
   },
   {
     id: "REQ-102",

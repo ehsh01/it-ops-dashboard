@@ -27,6 +27,11 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const statusColor = criticalCount > 0 ? "text-orange-600" : "text-green-600";
   const statusText = criticalCount > 0 ? "Action Required" : "All Clear";
   const StatusIcon = criticalCount > 0 ? AlertCircle : CheckCircle2;
+  
+  // New context/reason line
+  const statusReason = criticalCount > 0 
+    ? `${criticalCount} items blocking completion` 
+    : "System nominal";
 
   return (
     <div className="min-h-screen bg-slate-50 flex font-sans">
@@ -45,11 +50,14 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           
           {/* Global Status Confidence Indicator */}
           <div className="mb-8 p-3 rounded-lg bg-slate-50 border border-slate-100 flex items-center gap-3">
-             <div className={cn("w-2 h-2 rounded-full animate-pulse", criticalCount > 0 ? "bg-orange-500" : "bg-green-500")}></div>
-             <div className="flex-1">
+             <div className={cn("w-2 h-2 rounded-full animate-pulse flex-none", criticalCount > 0 ? "bg-orange-500" : "bg-green-500")}></div>
+             <div className="flex-1 min-w-0">
                 <p className="text-[10px] uppercase font-bold text-slate-400 tracking-wider">Current Status</p>
                 <p className={cn("text-xs font-bold flex items-center gap-1", statusColor)}>
                     <StatusIcon className="w-3 h-3" /> {statusText}
+                </p>
+                <p className="text-[10px] text-slate-400 mt-0.5 truncate" title={statusReason}>
+                   {statusReason}
                 </p>
              </div>
           </div>

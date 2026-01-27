@@ -48,10 +48,10 @@ export function ActionFeed() {
             <TabsList className="bg-slate-100/50 p-1 rounded-lg h-10 w-auto inline-flex gap-1">
               <TabsTrigger 
                 value="focus" 
-                className="rounded-md px-4 data-[state=active]:bg-[#F47321] data-[state=active]:text-white data-[state=active]:shadow-md font-bold text-xs transition-all tracking-wide"
+                className="rounded-md px-4 data-[state=active]:bg-[#F47321] data-[state=active]:text-white data-[state=active]:shadow-lg data-[state=active]:shadow-orange-500/20 font-bold text-xs transition-all tracking-wide ring-offset-2 ring-offset-white focus-visible:ring-2 focus-visible:ring-orange-500"
               >
-                <Zap className="w-3.5 h-3.5 mr-2 fill-current" />
-                FOCUS
+                <Zap className="w-3.5 h-3.5 mr-2 fill-current animate-pulse" />
+                FOCUS <span className="hidden sm:inline ml-1 opacity-90">— Act Now</span>
               </TabsTrigger>
               <TabsTrigger value="waiting" className="rounded-md px-4 data-[state=active]:bg-amber-100 data-[state=active]:text-amber-800 font-medium text-xs text-slate-500">
                 Waiting <span className="ml-2 bg-slate-200 text-slate-600 px-1.5 rounded-full text-[10px] data-[state=active]:bg-amber-200/50 data-[state=active]:text-amber-700">{waitingItems.length}</span>
@@ -166,18 +166,18 @@ function FeedItem({ item, type, index }: { item: ActionItem, type: string, index
       {/* Top Row: Meta */}
       <div className="flex justify-between items-start mb-2 opacity-70 group-hover:opacity-100 transition-opacity">
         <div className="flex items-center gap-2">
-          <Badge variant="outline" className={cn("text-[10px] px-1.5 py-0.5 h-5 gap-1.5 font-medium border", config.badge)}>
+          <Badge variant="outline" className={cn("text-[10px] px-1.5 py-0.5 h-5 gap-1.5 font-medium border opacity-75", config.badge)}>
             {getIcon(item.source)}
             {item.id}
           </Badge>
           
           {item.sender && (
-            <span className="text-xs font-semibold text-slate-700 flex items-center gap-1.5">
+            <span className="text-xs font-semibold text-slate-700 flex items-center gap-1.5 opacity-90">
                <span className="text-slate-300">•</span> {item.sender}
             </span>
           )}
         </div>
-        <span className="text-[10px] font-medium text-slate-400 whitespace-nowrap">{item.timestamp}</span>
+        <span className="text-[10px] font-medium text-slate-400 whitespace-nowrap opacity-75">{item.timestamp}</span>
       </div>
 
       {/* Main Content */}
@@ -188,6 +188,15 @@ function FeedItem({ item, type, index }: { item: ActionItem, type: string, index
         <p className="text-sm text-slate-600 line-clamp-2 leading-relaxed font-medium">
           {item.summary}
         </p>
+        
+        {/* Next Action Hint */}
+        {item.nextAction && (
+             <div className="mt-3 flex items-center gap-2 text-xs font-semibold text-slate-700 bg-slate-100/80 px-2 py-1.5 rounded w-fit border border-slate-200/50">
+                <ArrowRight className="w-3 h-3 text-slate-400" />
+                <span className="text-slate-500 uppercase text-[10px] font-bold tracking-wider mr-1">Next:</span>
+                {item.nextAction}
+             </div>
+        )}
         
         {/* Context / Reason / Impact */}
         <div className="mt-3 flex flex-wrap items-center gap-2">
