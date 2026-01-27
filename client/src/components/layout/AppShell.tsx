@@ -20,45 +20,41 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   ];
 
   return (
-    <div className="min-h-screen bg-background flex">
+    <div className="min-h-screen bg-slate-50 flex font-sans">
       {/* Sidebar */}
-      <aside className="w-64 border-r bg-card flex flex-col fixed h-full z-10">
-        <div className="p-6 border-b border-border/40">
-          <div className="flex items-center gap-3">
-            <div className="w-8 h-8 flex items-center justify-center font-bold">
+      <aside className="w-64 bg-white flex flex-col fixed h-full z-10 shadow-sm border-r border-slate-100">
+        <div className="p-6">
+          <div className="flex items-center gap-3 mb-8">
+            <div className="w-10 h-10 flex items-center justify-center font-bold">
               <img src="/um-logo.png" alt="UM" className="w-full h-full object-contain" />
             </div>
-            <div>
-              <h1 className="font-semibold tracking-tight text-sm">IT Ops Console</h1>
-              <p className="text-xs text-muted-foreground">Admin: j.doe</p>
-            </div>
           </div>
+
+          <nav className="flex-1 space-y-2">
+            {navItems.map((item) => {
+              const isActive = location === item.href;
+              return (
+                <Link key={item.href} href={item.href}>
+                  <div 
+                    className={cn(
+                      "flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-semibold transition-all cursor-pointer group",
+                      isActive 
+                        ? "bg-[#F47321] text-white shadow-md shadow-orange-500/20" 
+                        : "text-slate-500 hover:bg-slate-50 hover:text-slate-900"
+                    )}
+                  >
+                    <item.icon className={cn("w-5 h-5", isActive ? "text-white" : "text-slate-400 group-hover:text-slate-600")} />
+                    {item.label}
+                  </div>
+                </Link>
+              )
+            })}
+          </nav>
         </div>
 
-        <nav className="flex-1 p-4 space-y-1">
-          {navItems.map((item) => {
-            const isActive = location === item.href;
-            return (
-              <Link key={item.href} href={item.href}>
-                <div 
-                  className={cn(
-                    "flex items-center gap-3 px-3 py-2.5 rounded-md text-sm font-medium transition-all cursor-pointer",
-                    isActive 
-                      ? "bg-primary/10 text-primary hover:bg-primary/15" 
-                      : "text-muted-foreground hover:bg-muted hover:text-foreground"
-                  )}
-                >
-                  <item.icon className="w-4 h-4" />
-                  {item.label}
-                </div>
-              </Link>
-            )
-          })}
-        </nav>
-
-        <div className="p-4 border-t border-border/40">
+        <div className="mt-auto p-6 border-t border-slate-50">
            <Link href="/login">
-            <div className="flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors cursor-pointer">
+            <div className="flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium text-slate-500 hover:text-destructive hover:bg-destructive/5 transition-colors cursor-pointer">
               <LogOut className="w-4 h-4" />
               Sign Out
             </div>

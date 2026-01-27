@@ -33,28 +33,33 @@ export function EODChecklist() {
   const allDone = progress === 100;
 
   return (
-    <Card className={cn("transition-colors duration-500", allDone ? "bg-green-50 border-green-200" : "bg-slate-50 border-slate-200")}>
+    <Card className={cn("transition-colors duration-500 border-none shadow-sm", allDone ? "bg-green-50" : "bg-white")}>
       <CardHeader className="pb-2">
         <CardTitle className="text-sm font-semibold flex items-center justify-between">
-            <span className={cn(allDone ? "text-green-800" : "text-slate-900")}>Daily Close Progress</span>
-            <span className={cn("text-xs font-mono", allDone ? "text-green-600 font-bold" : "text-slate-500")}>
+            <span className={cn("text-slate-800")}>Daily Close Progress</span>
+            <span className={cn("text-sm font-mono", allDone ? "text-green-600 font-bold" : "text-slate-500")}>
                 {Math.round(progress)}%
             </span>
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
-        <Progress value={progress} className={cn("h-2", allDone && "bg-green-200")} />
+        <div className="relative w-full h-2 bg-slate-100 rounded-full overflow-hidden">
+            <div 
+                className={cn("absolute left-0 top-0 h-full transition-all duration-500 rounded-full", allDone ? "bg-green-500" : "bg-green-500")}
+                style={{ width: `${progress}%` }}
+            />
+        </div>
         
         {allDone ? (
              <div className="py-4 text-center animate-in zoom-in duration-300">
-                <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-2 text-green-600">
+                <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-2 text-green-600 shadow-sm">
                     <CheckCircle2 className="w-6 h-6" />
                 </div>
-                <p className="text-sm font-medium text-green-800">You are all set!</p>
+                <p className="text-sm font-bold text-green-800">You are all set!</p>
                 <p className="text-xs text-green-600">See you tomorrow.</p>
              </div>
         ) : (
-            <div className="space-y-2">
+            <div className="space-y-3">
                 {steps.map((step, i) => (
                     <div 
                         key={i} 
@@ -64,11 +69,11 @@ export function EODChecklist() {
                         {step.done ? (
                             <CheckCircle className="w-4 h-4 text-green-600 flex-none transition-transform active:scale-90" />
                         ) : (
-                            <Circle className="w-4 h-4 text-slate-300 group-hover:text-primary flex-none transition-transform active:scale-90" />
+                            <Circle className="w-4 h-4 text-slate-300 group-hover:text-green-500 flex-none transition-transform active:scale-90" />
                         )}
                         <span className={cn(
                             "transition-colors select-none",
-                            step.done ? "text-slate-500 line-through decoration-slate-300" : "text-slate-700 font-medium"
+                            step.done ? "text-slate-400 line-through decoration-slate-300" : "text-slate-600 font-medium group-hover:text-slate-900"
                         )}>
                             {step.label}
                         </span>
@@ -78,7 +83,7 @@ export function EODChecklist() {
         )}
 
         {!allDone && (
-            <Button variant="outline" className="w-full text-xs gap-2 bg-white mt-2">
+            <Button className="w-full text-xs gap-2 mt-2 bg-gradient-to-r from-orange-400 to-orange-500 hover:from-orange-500 hover:to-orange-600 text-white border-none shadow-md shadow-orange-500/20">
                 View Handoff Report <ArrowRight className="w-3 h-3" />
             </Button>
         )}
