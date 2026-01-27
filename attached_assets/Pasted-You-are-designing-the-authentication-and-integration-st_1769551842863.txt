@@ -1,0 +1,62 @@
+You are designing the authentication and integration strategy for a secure internal web application used by a University of Miami IT system administrator in a healthcare environment.
+
+Context:
+- The app is a personal operational dashboard used to organize daily work.
+- It aggregates signals from:
+  - Microsoft Outlook (emails, replies, follow-ups)
+  - Microsoft Teams (messages, mentions)
+  - Calendar events
+  - Ticketing/work orders (preferably via API, but email ingestion is acceptable)
+- The app is NOT intended to control corporate systems directly, only to read, organize, summarize, and optionally send user-initiated replies.
+
+Security & Compliance Constraints (Critical):
+- The user’s corporate account uses Microsoft MFA (Authenticator).
+- MFA must NOT be bypassed or weakened.
+- No passwords may ever be stored.
+- Authentication must be compatible with enterprise security, HIPAA, and university IT policies.
+- The solution must avoid techniques that resemble screen scraping, headless browser automation, or background bots acting without user intent.
+- All access must be permission-based, auditable, and revocable.
+
+Auth & Identity Requirements:
+- The app must authenticate the user in a way that works with Microsoft MFA.
+- The user should not be prompted for MFA on every use if the platform supports secure token refresh.
+- Authentication should support session-based access with proper expiration and renewal.
+- The app should be capable of operating in multiple modes depending on what corporate approval is available.
+
+Integration Scenarios to Consider:
+- Best case: Admin-approved Microsoft identity integration (e.g., enterprise app / OAuth).
+- Medium case: User-consented delegated access with limited scopes.
+- Fallback case: Email-only ingestion and parsing when API access is restricted.
+- Ticketing system may or may not expose an API; email-based ingestion must be supported as a fallback.
+
+Functional Needs:
+- Read and classify emails (urgent, action required, informational).
+- Detect unanswered messages and pending follow-ups.
+- Read Teams messages where the user is a participant (mentions, DMs, channels if permitted).
+- Read calendar events for daily planning.
+- Track ticket/work-order status via API or email correlation.
+- Allow user-initiated actions (e.g., reply to email, mark task done) without automated system control.
+
+Non-Functional Requirements:
+- Least-privilege access model.
+- Ability to disable or revoke integrations without breaking the app.
+- Clear separation between authentication, authorization, and data ingestion layers.
+- Architecture should support future expansion without redesigning auth.
+
+Your Task:
+- Evaluate all viable authentication and authorization approaches that meet the above constraints.
+- Identify trade-offs between security, usability, and deployment friction.
+- Select the most appropriate strategy (or hybrid strategy) for this environment.
+- Design the solution so it is maintainable, secure, and realistic in a corporate healthcare setting.
+
+Do NOT:
+- Provide step-by-step implementation code.
+- Hardcode a single auth method without considering fallbacks.
+- Assume unrestricted admin access.
+- Bypass MFA or enterprise security controls.
+
+Deliverables:
+- A clear explanation of the chosen auth strategy and why it fits this user and environment.
+- A description of supported fallback modes if permissions are denied.
+- A high-level architecture of how authentication and integrations interact.
+- Any assumptions or prerequisites that must be met for deployment.
