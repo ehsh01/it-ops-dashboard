@@ -1,0 +1,77 @@
+You are refining an existing IT Operations dashboard for a University of Miami healthcare IT administrator.
+
+This is NOT a redesign. The layout, structure, and core components already exist and should be preserved.
+The goal is to improve clarity, speed, and confidence for a high-volume daily workflow.
+
+Context:
+- The user manages tickets, emails, Teams messages, and compliance-related tasks.
+- The dashboard is used continuously throughout the day.
+- The biggest risks are missed follow-ups, unclear priority, and end-of-day uncertainty.
+- Visual design already uses UM colors (green and orange) and should continue to do so.
+
+Primary Objective:
+Make it immediately obvious:
+1) What requires action now
+2) Why it matters
+3) Whether the user is “clear” or still owes action
+
+Refinement Requirements:
+
+1) Action Feed Tabs (Focus / Waiting / FYI)
+- Make the active tab visually assertive and unmistakable.
+- The active tab should feel like an execution mode.
+- Inactive tabs should visually recede without disappearing.
+- Do not introduce clutter or excessive animation.
+
+2) Unified Action Feed – Priority Clarity
+- Within the feed, strengthen visual hierarchy so the top 1–2 most important items stand out instantly.
+- Priority indicators (SLA risk, VIP, compliance deadlines) should be more visually prominent.
+- De-emphasize secondary metadata (timestamps, IDs) so the issue content dominates.
+
+3) “Why This Matters” Context
+- Each actionable feed item should clearly communicate impact at a glance.
+- This can be implied visually or textually, but should reduce the need for interpretation.
+- Examples of impact include:
+  - Blocking multiple users
+  - Compliance deadline today
+  - VIP / physician waiting
+  - Patient care impact
+
+4) Daily Close Progress Panel Improvements
+- Make it explicit how many items remain before the day is considered “complete.”
+- Clearly indicate which remaining item(s) are blocking completion.
+- Provide a strong visual confirmation state when all daily items are complete.
+- This panel should give end-of-day confidence without requiring navigation elsewhere.
+
+5) New Ticket Action Improvements
+- Keep the existing “New Ticket” action.
+- Improve discoverability and reduce friction when creating tickets from existing context.
+- Ticket creation should feel like a natural continuation of work already visible in the dashboard.
+
+6) Sidebar Awareness Enhancements
+- Add subtle indicators (counts or visual cues) to sidebar items when new activity exists.
+- These indicators should inform without distracting from the main workflow.
+
+7) SLA Health Card Refinement
+- Preserve the existing SLA health display.
+- Add light contextual meaning (trend, timeframe, or recent change) without increasing complexity.
+- The SLA card should communicate confidence, not raw metrics.
+
+8) Global Status Confidence Indicator
+- Introduce a small, always-visible indicator that reflects the user’s overall state:
+  - All critical items handled
+  - Waiting on others
+  - Action still required by the user
+- This indicator should reduce anxiety and remove the need to manually scan the dashboard.
+
+Constraints:
+- Do not add new major sections.
+- Do not increase visual noise.
+- Do not reduce information density.
+- Favor clarity, hierarchy, and fast scanning over decorative elements.
+- Maintain a professional healthcare / enterprise aesthetic consistent with UM branding.
+
+Deliverables:
+- Updated UX behavior and visual refinements
+- Explanation of how priority and status are communicated more clearly
+- Any assumptions made to support these refinements

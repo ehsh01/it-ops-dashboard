@@ -30,6 +30,7 @@ export function EODChecklist() {
   };
 
   const progress = (steps.filter(s => s.done).length / steps.length) * 100;
+  const remainingCount = steps.filter(s => !s.done).length;
   const allDone = progress === 100;
 
   return (
@@ -37,15 +38,19 @@ export function EODChecklist() {
       <CardHeader className="pb-2">
         <CardTitle className="text-sm font-semibold flex items-center justify-between">
             <span className={cn("text-slate-800")}>Daily Close Progress</span>
-            <span className={cn("text-sm font-mono", allDone ? "text-green-600 font-bold" : "text-slate-500")}>
-                {Math.round(progress)}%
-            </span>
+            {allDone ? (
+                <span className="text-xs font-bold text-green-600">Complete</span>
+            ) : (
+                <span className="text-xs font-bold text-orange-600 bg-orange-50 px-2 py-0.5 rounded-full border border-orange-100">
+                    {remainingCount} Remaining
+                </span>
+            )}
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
         <div className="relative w-full h-2 bg-slate-100 rounded-full overflow-hidden">
             <div 
-                className={cn("absolute left-0 top-0 h-full transition-all duration-500 rounded-full", allDone ? "bg-green-500" : "bg-green-500")}
+                className={cn("absolute left-0 top-0 h-full transition-all duration-500 rounded-full", allDone ? "bg-green-500" : "bg-orange-500")}
                 style={{ width: `${progress}%` }}
             />
         </div>
@@ -69,7 +74,7 @@ export function EODChecklist() {
                         {step.done ? (
                             <CheckCircle className="w-4 h-4 text-green-600 flex-none transition-transform active:scale-90" />
                         ) : (
-                            <Circle className="w-4 h-4 text-slate-300 group-hover:text-green-500 flex-none transition-transform active:scale-90" />
+                            <Circle className="w-4 h-4 text-slate-300 group-hover:text-orange-500 flex-none transition-transform active:scale-90" />
                         )}
                         <span className={cn(
                             "transition-colors select-none",

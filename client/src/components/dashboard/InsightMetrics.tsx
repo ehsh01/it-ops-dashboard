@@ -1,6 +1,6 @@
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Flame, UserCircle, Crown, ShieldCheck } from "lucide-react";
+import { Flame, UserCircle, Crown, ShieldCheck, TrendingUp } from "lucide-react";
 import { metrics } from "./mockData";
 
 export function InsightMetrics() {
@@ -68,9 +68,15 @@ export function InsightMetrics() {
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,_var(--tw-gradient-stops))] from-emerald-500/20 to-transparent"></div>
         <CardContent className="p-4 flex items-center justify-between relative z-10">
           <div>
-             <p className="text-[10px] font-bold text-emerald-200 uppercase tracking-wider mb-1">
-              SLA Health
-            </p>
+             <div className="flex items-center gap-2 mb-1">
+                <p className="text-[10px] font-bold text-emerald-200 uppercase tracking-wider">
+                  SLA Health
+                </p>
+                <div className="flex items-center gap-1 text-[10px] text-emerald-300 bg-emerald-900/50 px-1.5 py-0.5 rounded-full">
+                    <TrendingUp className="w-3 h-3" />
+                    {metrics.slaTrend}
+                </div>
+             </div>
             <div className="flex items-baseline gap-2">
               <span className="text-3xl font-bold text-white">{metrics.slaCompliance}</span>
               <span className="text-xs font-medium text-emerald-400">Normal</span>

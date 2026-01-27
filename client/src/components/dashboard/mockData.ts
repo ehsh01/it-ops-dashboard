@@ -23,6 +23,7 @@ export interface ActionItem {
   timestamp: string;
   sender?: string;
   reason: string; // "Why it matters"
+  impact?: string; // Explicit impact statement e.g. "Patient Care Impact"
   slaStatus?: "breaching" | "warning" | "safe";
   waitingOn?: string;
 }
@@ -37,6 +38,7 @@ export const mockActionItems: ActionItem[] = [
     state: "action_required",
     timestamp: "10m ago",
     reason: "Service Degradation (Major)",
+    impact: "Clinical Staff Blocking",
     slaStatus: "breaching"
   },
   {
@@ -48,7 +50,8 @@ export const mockActionItems: ActionItem[] = [
     state: "action_required",
     timestamp: "25m ago",
     sender: "Mike Ross",
-    reason: "Direct Mention • Compliance Deadline"
+    reason: "Direct Mention • Compliance Deadline",
+    impact: "Audit Compliance Risk"
   },
   {
     id: "EMAIL-892",
@@ -59,7 +62,8 @@ export const mockActionItems: ActionItem[] = [
     state: "action_required",
     timestamp: "45m ago",
     sender: "Dr. Sarah Chen",
-    reason: "VIP Sender • Access Blocking"
+    reason: "VIP Sender • Access Blocking",
+    impact: "Research Blocker"
   },
   {
     id: "REQ-102",
@@ -89,5 +93,13 @@ export const metrics = {
   breachRisk: 2,
   waitingOnYou: 5,
   vipRequests: 3,
-  slaCompliance: "98.2%"
+  slaCompliance: "98.2%",
+  slaTrend: "+0.4% this week"
+};
+
+export const sidebarCounts = {
+  dashboard: 2, // Critical/Focus items
+  tickets: 12,
+  integrations: 0,
+  health: 1
 };
