@@ -20,11 +20,30 @@ import {
 import { ActionItem, mockActionItems, Source } from "./mockData";
 import { useToast } from "@/hooks/use-toast";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
+import { useAppState } from "@/lib/context";
+import { useState } from "react";
 
 export function ActionFeed() {
-  const activeItems = mockActionItems.filter(i => i.state === "action_required");
+  const { criticalCount, setCriticalCount } = useAppState();
+  
+  // Local state to simulate removing items when action is taken
+  const [removedItems, setRemovedItems] = useState<string[]>([]);
+
+  const activeItems = mockActionItems
+    .filter(i => i.state === "action_required")
+    .filter(i => !removedItems.includes(i.id));
+    
   const waitingItems = mockActionItems.filter(i => i.state === "waiting");
   const infoItems = mockActionItems.filter(i => i.state === "info");
+
+  // Sync critical count with active items length
+  if (criticalCount !== activeItems.length) {
+      setCriticalCount(activeItems.length);
+  }
+
+  const handleComplete = (id: string) => {
+    setRemovedItems([...removedItems, id]);
+  };
 
   return (
     <Card className="border-none shadow-sm h-full flex flex-col bg-white rounded-xl overflow-hidden ring-1 ring-slate-100">
@@ -68,7 +87,7 @@ export function ActionFeed() {
           
           <div className="mt-2">
              <TabsContent value="focus" className="mt-0 focus-visible:ring-0 animate-in fade-in slide-in-from-bottom-2 duration-300">
-               <FeedList items={activeItems} type="focus" />
+               <FeedList items={activeItems} type="focus" onComplete={handleComplete} />
              </TabsContent>
              <TabsContent value="waiting" className="mt-0 focus-visible:ring-0 animate-in fade-in slide-in-from-bottom-2 duration-300">
                <FeedList items={waitingItems} type="waiting" />
@@ -90,12 +109,15 @@ export function ActionFeed() {
   );
 }
 
-function FeedList({ items, type }: { items: ActionItem[], type: "focus" | "waiting" | "info" }) {
+function FeedList({ items, type, onComplete }: { items: ActionItem[], type: "focus" | "waiting" | "info", onComplete?: (id: string) => void }) {
   if (items.length === 0) {
     return (
-      <div className="p-12 text-center text-slate-500">
-        <CheckCircle2 className="w-12 h-12 mx-auto mb-3 text-slate-300" />
-        <p>All caught up!</p>
+      <div className="p-12 text-center text-slate-500 animate-in fade-in zoom-in duration-300">
+        <div className="w-12 h-12 bg-green-50 rounded-full flex items-center justify-center mx-auto mb-3 text-green-500">
+            <CheckCircle2 className="w-6 h-6" />
+        </div>
+        <p className="font-medium text-slate-700">All caught up!</p>
+        <p className="text-xs text-slate-400 mt-1">No pending items in this view.</p>
       </div>
     );
   }
@@ -103,17 +125,20 @@ function FeedList({ items, type }: { items: ActionItem[], type: "focus" | "waiti
   return (
     <div className="space-y-3 pt-4">
       {items.map((item, index) => (
-        <FeedItem key={item.id} item={item} type={type} index={index} />
+        <FeedItem key={item.id} item={item} type={type} index={index} onComplete={onComplete} />
       ))}
     </div>
   );
 }
 
-function FeedItem({ item, type, index }: { item: ActionItem, type: string, index: number }) {
+function FeedItem({ item, type, index, onComplete }: { item: ActionItem, type: string, index: number, onComplete?: (id: string) => void }) {
   const { toast } = useToast();
   const isTopItem = type === "focus" && index === 0;
 
   const handleAction = (action: string) => {
+    if (action === "Completed" && onComplete) {
+        onComplete(item.id);
+    }
     toast({
       title: `${action} applied`,
       description: `Item ${item.id} has been updated.`,

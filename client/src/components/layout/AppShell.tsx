@@ -11,27 +11,53 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { sidebarCounts } from "../dashboard/mockData";
+import { useAppState } from "@/lib/context";
 
 export function AppShell({ children }: { children: React.ReactNode }) {
   const [location] = useLocation();
+  const { criticalCount, eodComplete } = useAppState();
 
   const navItems = [
-    { label: "Dashboard", icon: LayoutDashboard, href: "/", count: sidebarCounts.dashboard },
+    { label: "Dashboard", icon: LayoutDashboard, href: "/", count: criticalCount },
     { label: "Tickets & Ops", icon: Ticket, href: "/tickets", count: sidebarCounts.tickets },
     { label: "Integrations", icon: ShieldCheck, href: "/integrations", count: sidebarCounts.integrations },
     { label: "System Health", icon: Activity, href: "/health", count: sidebarCounts.health },
   ];
 
-  // Determine global status based on dashboard count (mock logic)
-  const criticalCount = sidebarCounts.dashboard;
-  const statusColor = criticalCount > 0 ? "text-orange-600" : "text-green-600";
-  const statusText = criticalCount > 0 ? "Action Required" : "All Clear";
-  const StatusIcon = criticalCount > 0 ? AlertCircle : CheckCircle2;
+  // Global Status Logic
+  // Status is "All Clear" if EOD is complete AND no critical items remain.
+  // Or if the user just wants EOD complete to signal "Clear" for the day (assuming critical items were handled or deferred).
+  // Let's go with: If EOD is complete, we show "All Clear" (green).
+  // If EOD is NOT complete but critical items are 0, we might show "Pending EOD".
+  // If critical items > 0, we show "Action Required".
   
-  // New context/reason line
-  const statusReason = criticalCount > 0 
-    ? `${criticalCount} items blocking completion` 
-    : "System nominal";
+  let statusColor = "text-green-600";
+  let statusText = "All Clear";
+  let StatusIcon = CheckCircle2;
+  let statusReason = "Ready for sign-off";
+  let statusBg = "bg-green-500";
+
+  if (criticalCount > 0) {
+    statusColor = "text-orange-600";
+    statusText = "Action Required";
+    StatusIcon = AlertCircle;
+    statusReason = `${criticalCount} items blocking completion`;
+    statusBg = "bg-orange-500";
+  } else if (!eodComplete) {
+     // Critical count is 0, but EOD not done
+    statusColor = "text-slate-600";
+    statusText = "Wrap-up Pending";
+    StatusIcon = Activity;
+    statusReason = "Complete daily checklist";
+    statusBg = "bg-slate-400";
+  } else {
+    // All clear
+    statusColor = "text-green-600";
+    statusText = "All Clear";
+    StatusIcon = CheckCircle2;
+    statusReason = "System nominal • Good evening";
+    statusBg = "bg-green-500";
+  }
 
   return (
     <div className="min-h-screen bg-slate-50 flex font-sans">
@@ -49,14 +75,14 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           </div>
           
           {/* Global Status Confidence Indicator */}
-          <div className="mb-8 p-3 rounded-lg bg-slate-50 border border-slate-100 flex items-center gap-3">
-             <div className={cn("w-2 h-2 rounded-full animate-pulse flex-none", criticalCount > 0 ? "bg-orange-500" : "bg-green-500")}></div>
+          <div className="mb-8 p-3 rounded-lg bg-slate-50 border border-slate-100 flex items-center gap-3 transition-all duration-500">
+             <div className={cn("w-2 h-2 rounded-full animate-pulse flex-none", statusBg)}></div>
              <div className="flex-1 min-w-0">
                 <p className="text-[10px] uppercase font-bold text-slate-400 tracking-wider">Current Status</p>
-                <p className={cn("text-xs font-bold flex items-center gap-1", statusColor)}>
+                <p className={cn("text-xs font-bold flex items-center gap-1 transition-colors duration-300", statusColor)}>
                     <StatusIcon className="w-3 h-3" /> {statusText}
                 </p>
-                <p className="text-[10px] text-slate-400 mt-0.5 truncate" title={statusReason}>
+                <p className="text-[10px] text-slate-400 mt-0.5 truncate transition-all duration-300" title={statusReason}>
                    {statusReason}
                 </p>
              </div>

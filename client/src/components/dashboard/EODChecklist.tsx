@@ -2,12 +2,15 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { CheckCircle, Circle, ArrowRight, CheckCircle2 } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
+import { useAppState } from "@/lib/context";
 
 export function EODChecklist() {
   const { toast } = useToast();
+  const { setEodComplete, setEodProgress } = useAppState();
+  
   const [steps, setSteps] = useState([
     { label: "Review Critical Tickets", done: true },
     { label: "Clear Unread Emails", done: false },
@@ -20,12 +23,19 @@ export function EODChecklist() {
     newSteps[index].done = !newSteps[index].done;
     setSteps(newSteps);
     
+    // Update global state
+    const newProgress = (newSteps.filter(s => s.done).length / newSteps.length) * 100;
+    setEodProgress(newProgress);
+
     if (newSteps.every(s => s.done)) {
+        setEodComplete(true);
         toast({
             title: "Ready to leave!",
-            description: "All EOD tasks are complete.",
+            description: "All EOD tasks are complete. Sidebar status updated.",
             variant: "default",
         });
+    } else {
+        setEodComplete(false);
     }
   };
 
@@ -57,7 +67,14 @@ export function EODChecklist() {
         
         {allDone ? (
              <div className="py-4 text-center animate-in zoom-in duration-300">
-                <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-2 text-green-600 shadow-sm">
+                <div 
+                  className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-2 text-green-600 shadow-sm cursor-pointer hover:bg-green-200 transition-colors"
+                  onClick={() => {
+                     // Toggle last item to undo for demo purposes
+                     toggleStep(steps.length - 1);
+                  }}
+                  title="Click to undo (Demo)"
+                >
                     <CheckCircle2 className="w-6 h-6" />
                 </div>
                 <p className="text-sm font-bold text-green-800">You are all set!</p>

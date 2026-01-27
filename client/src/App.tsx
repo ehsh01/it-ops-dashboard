@@ -8,6 +8,7 @@ import Dashboard from "@/pages/Dashboard";
 import Login from "@/pages/Login";
 import Integrations from "@/pages/Integrations";
 import { AppShell } from "@/components/layout/AppShell";
+import { AppProvider } from "@/lib/context";
 
 function Router() {
   const [location] = useLocation();
@@ -34,10 +35,12 @@ function Router() {
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
-      <TooltipProvider>
-        <Toaster />
-        <Router />
-      </TooltipProvider>
+      <AppProvider>
+        <TooltipProvider>
+          <Toaster />
+          <Router />
+        </TooltipProvider>
+      </AppProvider>
     </QueryClientProvider>
   );
 }
