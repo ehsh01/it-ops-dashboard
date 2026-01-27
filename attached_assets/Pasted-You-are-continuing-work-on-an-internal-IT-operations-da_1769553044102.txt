@@ -1,0 +1,75 @@
+You are continuing work on an internal IT operations dashboard for a healthcare / university IT administrator.
+
+This is a Phase 2 iteration focused on usability, prioritization, and ensuring that no critical work is missed during a busy day.
+
+Context:
+- The user handles high volumes of email, Teams messages, and tickets.
+- Missed follow-ups and delayed responses are the primary risk.
+- The dashboard must reduce cognitive load and make priorities obvious at a glance.
+- The app already aggregates tickets, email, Teams mentions, calendar events, and system status.
+
+Primary Goal (Non-Negotiable):
+The dashboard must always answer this question clearly:
+“What do I need to act on right now, and what can safely wait?”
+
+Design Objectives:
+- Transform the dashboard from a passive status view into an active decision-support system.
+- Reduce noise and surface accountability.
+- Adapt behavior based on time of day and task state.
+- Minimize clicks and mental context switching.
+
+Required Enhancements:
+
+1) Time-Aware Dashboard Behavior
+- The UI should change emphasis based on time context (e.g., active work hours vs end-of-day).
+- During active hours, prioritize unresolved, blocking, or user-waiting items.
+- Toward the end of the day, emphasize follow-ups, incomplete tasks, and items needing closure or handoff.
+
+2) Unified Action Feed Improvements
+- Each item in the feed must clearly communicate:
+  - Why it matters
+  - Who is waiting on whom
+  - What the recommended next action is
+- Items that are waiting on others should be visually de-emphasized but not lost.
+- Allow intelligent snoozing that automatically resurfaces items based on events (reply received, time elapsed, SLA risk).
+
+3) Accountability vs Awareness Separation
+- Clearly distinguish between:
+  - Items where the user owes action
+  - Informational or FYI items
+- Reduce visual competition between these two categories.
+
+4) Priority Weighting
+- Certain senders (e.g., physicians, leadership) and certain topics (e.g., Epic, Citrix, access issues) must be visually and logically prioritized.
+- Urgency should be based on impact, not just timestamps.
+
+5) Ticket Awareness Enhancements
+- Replace simple ticket counts with insight-based summaries:
+  - High impact
+  - Near SLA
+  - Waiting on user
+  - Low priority
+- Clicking a summary should take the user directly to the most critical subset.
+
+6) Action Outcome Shortcuts
+- Common actions (reply, acknowledge, mark waiting, convert to task/ticket) should be one-click and consistent across items.
+- Actions should prepare or generate structured notes suitable for ticketing systems without forcing manual rewriting.
+
+7) End-of-Day Confidence Check
+- Provide a simple, unambiguous indicator showing whether:
+  - All critical items are handled
+  - Items are waiting on others
+  - The user still owes action to someone
+
+Constraints:
+- Do not redesign the app from scratch.
+- Build on the existing layout and visual language.
+- Avoid unnecessary animations or visual clutter.
+- Do not assume unrestricted admin or API access.
+- Favor clarity, speed, and low mental overhead.
+
+Deliverables:
+- Updated UX structure and component behavior
+- Explanation of how priorities are calculated and surfaced
+- Description of how the UI adapts throughout the day
+- Any assumptions or prerequisites for Phase 2 features
