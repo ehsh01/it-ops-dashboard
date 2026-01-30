@@ -1,0 +1,49 @@
+root@ubuntu-s-1vcpu-1gb-35gb-intel-atl1-01:/var/www/it-ops-dashboard# pm2 logs it-ops-dashboard --lines 30
+[TAILING] Tailing last 30 lines for [it-ops-dashboard] process (change the value with --lines option)
+/root/.pm2/logs/it-ops-dashboard-out.log last 30 lines:
+48|it-ops- | > NODE_ENV=production node dist/index.cjs
+48|it-ops- |
+48|it-ops- |
+48|it-ops- | > rest-express@1.0.0 start
+48|it-ops- | > NODE_ENV=production node dist/index.cjs
+48|it-ops- |
+48|it-ops- |
+48|it-ops- | > rest-express@1.0.0 start
+48|it-ops- | > NODE_ENV=production node dist/index.cjs
+48|it-ops- |
+48|it-ops- |
+48|it-ops- | > rest-express@1.0.0 start
+48|it-ops- | > NODE_ENV=production node dist/index.cjs
+48|it-ops- |
+48|it-ops- |
+48|it-ops- | > rest-express@1.0.0 start
+48|it-ops- | > NODE_ENV=production node dist/index.cjs
+48|it-ops- |
+48|it-ops- |
+48|it-ops- | > rest-express@1.0.0 start
+48|it-ops- | > NODE_ENV=production node dist/index.cjs
+48|it-ops- |
+48|it-ops- |
+48|it-ops- | > rest-express@1.0.0 start
+48|it-ops- | > NODE_ENV=production node dist/index.cjs
+48|it-ops- |
+48|it-ops- |
+48|it-ops- | > rest-express@1.0.0 start
+48|it-ops- | > NODE_ENV=production node dist/index.cjs
+48|it-ops- |
+
+/root/.pm2/logs/it-ops-dashboard-error.log last 30 lines:
+48|it-ops- | )return i.status(400).json({error:a.errors});i.status(500).json({error:a.message})}}),e.patch("/api/action-items/:id",async(n,i)=>{try{let{id:a}=n.params,s=n.body,o=await Ee.updateActionItem(a,s);if(!o)return i.status(404).json({error:"Item not found"});i.json(o)}catch(a){i.status(500).json({error:a.message})}}),e.delete("/api/action-items/:id",async(n,i)=>{try{let{id:a}=n.params;if(!await Ee.deleteActionItem(a))return i.status(404).json({error:"Item not found"});i.json({success:!0})}catch(a){i.status(500).json({error:a.message})}}),e.get("/api/eod-tasks",async(n,i)=>{try{let a=await Ee.getUserByUsername("j.doe");if(!a)return i.status(404).json({error:"User not found"});let s=n.query.date||new Date().toISOString().split("T")[0],o=await Ee.getEodTasks(a.id,s);o.length===0&&(o=await Ee.initializeDefaultEodTasks(a.id,s)),i.json(o)}catch(a){i.status(500).json({error:a.message})}}),e.patch("/api/eod-tasks/:id",async(n,i)=>{try{let{id:a}=n.params,s=n.body,o=await Ee.updateEodTask(a,s);if(!o)return i.status(404).json({error:"Task not found"});i.json(o)}catch(a){i.status(500).json({error:a.message})}}),e.post("/api/init-demo-data",async(n,i)=>{try{let a=await Ee.getUserByUsername("j.doe");if(!a)return i.status(404).json({error:"User not found"});let s=await Ee.getActionItems(a.id);if(s.length>0)return i.json({message:"Demo data already exists",items:s});let o=[{userId:a.id,title:"VPN Gateway Latency - Health Science Campus",summary:"Multiple users reporting slow connection speeds. Network logs showing high packet loss on Gateway-02.",source:"ticket",priority:"critical",state:"action_required",reason:"Service Degradation (Major)",impact:"Clinical Staff Blocking",slaStatus:"breaching",nextAction:"Acknowledge & escalate to Network"},{userId:a.id,title:"Mentioned by Mike Ross (Security Lead)",summary:"@J.Doe Can you verify the firewall logs for the new radiometry server? Need this for the audit report by 2pm.",source:"teams",priority:"high",state:"action_required",sender:"Mike Ross",reason:"Direct Mention \u2022 Compliance Deadline",impact:"Audit Compliance Risk",nextAction:"Verify logs \u2192 reply before 2 PM"},{userId:a.id,title:"Re: Access Request for Cardiology Dataset",summary:"I've attached the IRB approval. Please expedite access for Dr. Chen.",source:"email",priority:"high",state:"action_required",sender:"Dr. Sarah Chen",reason:"VIP Sender \u2022 Access Blocking",impact:"Research Blocker",nextAction:"Grant access in AD"},{userId:a.id,title:"New Hire Provisioning - Radiology",summary:"Waiting for HR to confirm start date before creating AD account.",source:"ticket",priority:"medium",state:"waiting",reason:"Routine Task",waitingOn:"HR Dept"},{userId:a.id,title:"Scheduled Maintenance: This Weekend",summary:"FYI: The storage array firmware update is scheduled for Saturday 2am.",source:"email",priority:"low",state:"info",sender:"Infra Team",reason:"FYI Only"}],u=await Promise.all(o.map(c=>Ee.createActionItem(c)));i.json({message:"Demo data initialized",items:u})}catch(a){i.status(500).json({error:a.message})}}),t}var b1=kn(Yc(),1),w1=kn(require("fs"),1),Yp=kn(require("path"),1);function S1(t){let e=Yp.default.resolve(__dirname,"public");if(!w1.default.existsSync(e))throw new Error(`Could not find the build directory: ${e}, make sure to build the client first`);t.use(b1.default.static(e)),t.use("/{*path}",(r,n)=>{n.sendFile(Yp.default.resolve(e,"index.html"))})}var E1=require("http"),Nr=(0,Fs.default)(),_1=(0,E1.createServer)(Nr);Nr.use(Fs.default.json({verify:(t,e,r)=>{t.rawBody=r}}));Nr.use(Fs.default.urlencoded({extended:!1}));function ed(t,e="express"){let r=new Date().toLocaleTimeString("en-US",{hour:"numeric",minute:"2-digit",second:"2-digit",hour12:!0});console.log(`${r} [${e}] ${t}`)}Nr.use((t,e,r)=>{let n=Date.now(),i=t.path,a,s=e.json;e.json=function(o,...u){return a=o,s.apply(e,[o,...u])},e.on("finish",()=>{let o=Date.now()-n;if(i.startsWith("/api")){let u=`${t.method} ${i} ${e.statusCode} in ${o}ms`;a&&(u+=` :: ${JSON.stringify(a)}`),ed(u)}}),r()});(async()=>{await x1(_1,Nr),Nr.use((e,r,n,i)=>{let a=e.status||e.statusCode||500,s=e.message||"Internal Server Error";return console.error("Internal Server Error:",e),n.headersSent?i(e):n.status(a).json({message:s})}),S1(Nr);let t=parseInt(process.env.PORT||"5000",10);_1.listen({port:t,host:"0.0.0.0",reusePort:!0},()=>{ed(`serving on port ${t}`)})})();0&&(module.exports={log});
+48|it-ops- |                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        
+48|it-ops- |
+48|it-ops- | Error: DATABASE_URL must be set. Did you forget to provision a database?
+48|it-ops- |     at Object.<anonymous> (/var/www/it-ops-dashboard/dist/index.cjs:65:99714)
+48|it-ops- |     at Module._compile (node:internal/modules/cjs/loader:1521:14)
+48|it-ops- |     at Module._extensions..js (node:internal/modules/cjs/loader:1623:10)
+48|it-ops- |     at Module.load (node:internal/modules/cjs/loader:1266:32)
+48|it-ops- |     at Module._load (node:internal/modules/cjs/loader:1091:12)
+48|it-ops- |     at Function.executeUserEntryPoint [as runMain] (node:internal/modules/run_main:164:12)
+48|it-ops- |     at node:internal/main/run_main_module:28:49
+48|it-ops- |
+48|it-ops- | Node.js v20.19.6
+
