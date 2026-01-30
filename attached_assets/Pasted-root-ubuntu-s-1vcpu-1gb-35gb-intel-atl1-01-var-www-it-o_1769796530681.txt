@@ -1,0 +1,58 @@
+root@ubuntu-s-1vcpu-1gb-35gb-intel-atl1-01:/var/www/it-ops-dashboard# cd /var/www/it-ops-dashboard
+git fetch origin && git reset --hard origin/main
+npm install
+npm run build
+pm2 restart it-ops-dashboard
+remote: Enumerating objects: 17, done.
+remote: Counting objects: 100% (17/17), done.
+remote: Compressing objects: 100% (9/9), done.
+remote: Total 9 (delta 5), reused 0 (delta 0), pack-reused 0 (from 0)
+Unpacking objects: 100% (9/9), 86.17 KiB | 2.53 MiB/s, done.
+From https://github.com/ehsh01/it-ops-dashboard
+   9a0a0d5..0d562d6  main       -> origin/main
+HEAD is now at 0d562d6 Add dotenv for loading .env file in production
+
+added 1 package, and audited 401 packages in 2s
+
+53 packages are looking for funding
+  run `npm fund` for details
+
+5 moderate severity vulnerabilities
+
+To address issues that do not require attention, run:
+  npm audit fix
+
+To address all issues (including breaking changes), run:
+  npm audit fix --force
+
+Run `npm audit` for details.
+
+> rest-express@1.0.0 build
+> tsx script/build.ts
+
+building client...
+vite v7.3.1 building client environment for production...
+✓ 1797 modules transformed.
+rendering chunks (1)...[meta-images] no Replit deployment domain found, skipping meta tag updates
+../dist/public/index.html                   1.25 kB │ gzip:   0.56 kB
+../dist/public/assets/index-BNHEU5vM.css  115.01 kB │ gzip:  18.69 kB
+../dist/public/assets/index-Cxy1lWYh.js   380.94 kB │ gzip: 119.40 kB
+✓ built in 5.86s
+building server...
+
+  dist/index.cjs  1012.6kb
+
+⚡ Done in 307ms
+Use --update-env to update environment variables
+[PM2] Applying action restartProcessId on app [it-ops-dashboard](ids: [ 48 ])
+[PM2] [it-ops-dashboard](48) ✓
+┌────┬────────────────────┬──────────┬──────┬───────────┬──────────┬──────────┐
+│ id │ name               │ mode     │ ↺    │ status    │ cpu      │ memory   │
+├────┼────────────────────┼──────────┼──────┼───────────┼──────────┼──────────┤
+│ 22 │ ezi-crm            │ fork     │ 12   │ online    │ 0%       │ 21.3mb   │
+│ 48 │ it-ops-dashboard   │ fork     │ 30   │ online    │ 0%       │ 35.2mb   │
+│ 46 │ psychiatry-api     │ cluster  │ 98   │ online    │ 0%       │ 20.4mb   │
+│ 0  │ reviewkeeper       │ fork     │ 56   │ online    │ 0%       │ 16.7mb   │
+│ 34 │ um-it-find         │ fork     │ 7    │ online    │ 0%       │ 25.6mb   │
+└────┴────────────────────┴──────────┴──────┴───────────┴──────────┴──────────┘
+root@ubuntu-s-1vcpu-1gb-35gb-intel-atl1-01:/var/www/it-ops-dashboard#
