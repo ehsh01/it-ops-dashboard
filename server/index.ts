@@ -26,6 +26,11 @@ app.use(
 
 app.use(express.urlencoded({ extended: false }));
 
+// Trust proxy for secure cookies behind Nginx
+if (process.env.NODE_ENV === "production") {
+  app.set("trust proxy", 1);
+}
+
 const PgStore = pgSession(session);
 const pool = new pg.Pool({
   connectionString: process.env.DATABASE_URL,
