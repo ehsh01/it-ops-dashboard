@@ -12,6 +12,7 @@ export default function Login() {
   const [_, setLocation] = useLocation();
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
   const [isRegister, setIsRegister] = useState(false);
   const [displayName, setDisplayName] = useState("");
   const [error, setError] = useState("");
@@ -52,6 +53,14 @@ export default function Login() {
     if (isRegister) {
       if (!displayName.trim()) {
         setError("Display name is required");
+        return;
+      }
+      if (password !== confirmPassword) {
+        setError("Passwords do not match");
+        return;
+      }
+      if (password.length < 6) {
+        setError("Password must be at least 6 characters");
         return;
       }
       registerMutation.mutate({ username, password, displayName });
@@ -123,19 +132,34 @@ export default function Login() {
               </div>
 
               {isRegister && (
-                <div className="space-y-2">
-                  <Label htmlFor="displayName">Display Name</Label>
-                  <Input 
-                    id="displayName"
-                    data-testid="input-display-name"
-                    placeholder="Your full name" 
-                    type="text" 
-                    className="bg-slate-50"
-                    value={displayName}
-                    onChange={(e) => setDisplayName(e.target.value)}
-                    required
-                  />
-                </div>
+                <>
+                  <div className="space-y-2">
+                    <Label htmlFor="confirmPassword">Confirm Password</Label>
+                    <Input 
+                      id="confirmPassword"
+                      data-testid="input-confirm-password"
+                      placeholder="Re-enter password" 
+                      type="password" 
+                      className="bg-slate-50"
+                      value={confirmPassword}
+                      onChange={(e) => setConfirmPassword(e.target.value)}
+                      required
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="displayName">Display Name</Label>
+                    <Input 
+                      id="displayName"
+                      data-testid="input-display-name"
+                      placeholder="Your full name" 
+                      type="text" 
+                      className="bg-slate-50"
+                      value={displayName}
+                      onChange={(e) => setDisplayName(e.target.value)}
+                      required
+                    />
+                  </div>
+                </>
               )}
 
               <Button 
@@ -163,6 +187,7 @@ export default function Login() {
               onClick={() => {
                 setIsRegister(!isRegister);
                 setError("");
+                setConfirmPassword("");
               }}
             >
               {isRegister ? "Already have an account? Sign in" : "Need an account? Register"}
