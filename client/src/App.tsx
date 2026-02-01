@@ -7,6 +7,7 @@ import NotFound from "@/pages/not-found";
 import Dashboard from "@/pages/Dashboard";
 import Login from "@/pages/Login";
 import Integrations from "@/pages/Integrations";
+import Admin from "@/pages/Admin";
 import { AppShell } from "@/components/layout/AppShell";
 import { AppProvider } from "@/lib/context";
 import { Loader2 } from "lucide-react";
@@ -39,6 +40,7 @@ function ProtectedRoutes() {
       <Switch>
         <Route path="/" component={Dashboard} />
         <Route path="/integrations" component={Integrations} />
+        <Route path="/admin" component={Admin} />
         <Route component={NotFound} />
       </Switch>
     </AppShell>

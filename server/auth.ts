@@ -37,6 +37,18 @@ export function requireAuth(req: Request, res: Response, next: NextFunction) {
   next();
 }
 
+export async function requireAdmin(req: Request, res: Response, next: NextFunction) {
+  if (!req.session.userId) {
+    return res.status(401).json({ error: "Unauthorized" });
+  }
+  
+  const user = await storage.getUser(req.session.userId);
+  if (!user || user.role !== "admin") {
+    return res.status(403).json({ error: "Admin access required" });
+  }
+  next();
+}
+
 export async function getCurrentUser(req: Request) {
   if (!req.session.userId) {
     return null;

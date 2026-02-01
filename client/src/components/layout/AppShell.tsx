@@ -7,18 +7,27 @@ import {
   Activity,
   Ticket,
   CheckCircle2,
-  AlertCircle
+  AlertCircle,
+  Users
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { sidebarCounts } from "../dashboard/mockData";
 import { useAppState } from "@/lib/context";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { apiRequest } from "@/lib/queryClient";
+import { useMutation, useQueryClient, useQuery } from "@tanstack/react-query";
+import { apiRequest, getQueryFn } from "@/lib/queryClient";
+import type { User } from "@shared/schema";
 
 export function AppShell({ children }: { children: React.ReactNode }) {
   const [location, setLocation] = useLocation();
   const { criticalCount, eodComplete } = useAppState();
   const queryClient = useQueryClient();
+
+  const { data: currentUser } = useQuery<User | null>({
+    queryKey: ["/api/user"],
+    queryFn: getQueryFn({ on401: "returnNull" }),
+  });
+
+  const isAdmin = currentUser?.role === "admin";
 
   const logoutMutation = useMutation({
     mutationFn: async () => {
@@ -39,6 +48,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     { label: "Tickets & Ops", icon: Ticket, href: "/tickets", count: sidebarCounts.tickets },
     { label: "Integrations", icon: ShieldCheck, href: "/integrations", count: sidebarCounts.integrations },
     { label: "System Health", icon: Activity, href: "/health", count: sidebarCounts.health },
+    ...(isAdmin ? [{ label: "Admin", icon: Users, href: "/admin", count: 0 }] : []),
   ];
 
   // Global Status Logic
@@ -87,7 +97,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             </div>
             <div>
               <h1 className="font-bold text-lg text-slate-900 leading-tight">IT Ops Console</h1>
-              <p className="text-sm text-slate-500">Admin: j.doe</p>
+              <p className="text-sm text-slate-500">{currentUser?.displayName || "Loading..."}</p>
             </div>
           </div>
           

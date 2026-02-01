@@ -3,7 +3,7 @@ import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { insertActionItemSchema, insertEodTaskSchema } from "@shared/schema";
 import { z } from "zod";
-import { authenticateUser, hashPassword, requireAuth, getCurrentUser } from "./auth";
+import { authenticateUser, hashPassword, requireAuth, requireAdmin, getCurrentUser } from "./auth";
 
 const loginSchema = z.object({
   username: z.string().min(1),
@@ -271,6 +271,76 @@ export async function registerRoutes(
       );
 
       res.json({ message: "Demo data initialized", items: createdItems });
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // Admin API routes
+  app.get("/api/admin/users", requireAdmin, async (req, res) => {
+    try {
+      const users = await storage.getAllUsers();
+      const usersWithoutPasswords = users.map(({ password, ...user }) => user);
+      res.json(usersWithoutPasswords);
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  app.patch("/api/admin/users/:id", requireAdmin, async (req, res) => {
+    try {
+      const id = req.params.id as string;
+      const { role, displayName } = req.body;
+      
+      const updates: any = {};
+      if (role) updates.role = role;
+      if (displayName) updates.displayName = displayName;
+      
+      const user = await storage.updateUser(id, updates);
+      if (!user) {
+        return res.status(404).json({ error: "User not found" });
+      }
+      const { password, ...userWithoutPassword } = user;
+      res.json(userWithoutPassword);
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  app.delete("/api/admin/users/:id", requireAdmin, async (req, res) => {
+    try {
+      const id = req.params.id as string;
+      const currentUser = await getCurrentUser(req);
+      
+      if (currentUser?.id === id) {
+        return res.status(400).json({ error: "Cannot delete your own account" });
+      }
+      
+      const success = await storage.deleteUser(id);
+      if (!success) {
+        return res.status(404).json({ error: "User not found" });
+      }
+      res.json({ success: true });
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  app.post("/api/admin/users/:id/reset-password", requireAdmin, async (req, res) => {
+    try {
+      const id = req.params.id as string;
+      const { newPassword } = req.body;
+      
+      if (!newPassword || newPassword.length < 6) {
+        return res.status(400).json({ error: "Password must be at least 6 characters" });
+      }
+      
+      const hashedPassword = await hashPassword(newPassword);
+      const user = await storage.updateUser(id, { password: hashedPassword });
+      if (!user) {
+        return res.status(404).json({ error: "User not found" });
+      }
+      res.json({ success: true });
     } catch (error: any) {
       res.status(500).json({ error: error.message });
     }
