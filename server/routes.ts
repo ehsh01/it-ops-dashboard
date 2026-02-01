@@ -3,32 +3,87 @@ import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { insertActionItemSchema, insertEodTaskSchema } from "@shared/schema";
 import { z } from "zod";
+import { authenticateUser, hashPassword, requireAuth, getCurrentUser } from "./auth";
+
+const loginSchema = z.object({
+  username: z.string().min(1),
+  password: z.string().min(1),
+});
+
+const registerSchema = z.object({
+  username: z.string().min(3).max(50),
+  password: z.string().min(6),
+  displayName: z.string().min(1).max(100),
+});
 
 export async function registerRoutes(
   httpServer: Server,
   app: Express
 ): Promise<Server> {
-  // Demo user - in production this would come from authentication
-  const DEMO_USER_ID = "demo-user";
-
-  // Initialize demo user if not exists
-  (async () => {
-    const existingUser = await storage.getUserByUsername("j.doe");
-    if (!existingUser) {
-      await storage.createUser({
-        username: "j.doe",
-        password: "demo", // In production, use proper hashing
-        displayName: "J. Doe",
-      });
+  // Authentication routes
+  app.post("/api/auth/login", async (req, res) => {
+    try {
+      const { username, password } = loginSchema.parse(req.body);
+      const user = await authenticateUser(username, password);
+      
+      if (!user) {
+        return res.status(401).json({ error: "Invalid username or password" });
+      }
+      
+      req.session.userId = user.id;
+      const { password: _, ...userWithoutPassword } = user;
+      res.json(userWithoutPassword);
+    } catch (error: any) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ error: "Invalid credentials format" });
+      }
+      res.status(500).json({ error: error.message });
     }
-  })();
+  });
+
+  app.post("/api/auth/logout", (req, res) => {
+    req.session.destroy((err) => {
+      if (err) {
+        return res.status(500).json({ error: "Failed to logout" });
+      }
+      res.clearCookie("connect.sid");
+      res.json({ success: true });
+    });
+  });
+
+  app.post("/api/auth/register", async (req, res) => {
+    try {
+      const { username, password, displayName } = registerSchema.parse(req.body);
+      
+      const existingUser = await storage.getUserByUsername(username);
+      if (existingUser) {
+        return res.status(400).json({ error: "Username already exists" });
+      }
+      
+      const hashedPassword = await hashPassword(password);
+      const user = await storage.createUser({
+        username,
+        password: hashedPassword,
+        displayName,
+      });
+      
+      req.session.userId = user.id;
+      const { password: _, ...userWithoutPassword } = user;
+      res.json(userWithoutPassword);
+    } catch (error: any) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ error: error.errors });
+      }
+      res.status(500).json({ error: error.message });
+    }
+  });
 
   // Get current user
   app.get("/api/user", async (req, res) => {
     try {
-      const user = await storage.getUserByUsername("j.doe");
+      const user = await getCurrentUser(req);
       if (!user) {
-        return res.status(404).json({ error: "User not found" });
+        return res.status(401).json({ error: "Not authenticated" });
       }
       const { password, ...userWithoutPassword } = user;
       res.json(userWithoutPassword);
@@ -37,12 +92,12 @@ export async function registerRoutes(
     }
   });
 
-  // Action Items API
-  app.get("/api/action-items", async (req, res) => {
+  // Action Items API (protected)
+  app.get("/api/action-items", requireAuth, async (req, res) => {
     try {
-      const user = await storage.getUserByUsername("j.doe");
+      const user = await getCurrentUser(req);
       if (!user) {
-        return res.status(404).json({ error: "User not found" });
+        return res.status(401).json({ error: "Not authenticated" });
       }
       const items = await storage.getActionItems(user.id);
       res.json(items);
@@ -51,11 +106,11 @@ export async function registerRoutes(
     }
   });
 
-  app.post("/api/action-items", async (req, res) => {
+  app.post("/api/action-items", requireAuth, async (req, res) => {
     try {
-      const user = await storage.getUserByUsername("j.doe");
+      const user = await getCurrentUser(req);
       if (!user) {
-        return res.status(404).json({ error: "User not found" });
+        return res.status(401).json({ error: "Not authenticated" });
       }
 
       const validated = insertActionItemSchema.parse({
@@ -72,9 +127,9 @@ export async function registerRoutes(
     }
   });
 
-  app.patch("/api/action-items/:id", async (req, res) => {
+  app.patch("/api/action-items/:id", requireAuth, async (req, res) => {
     try {
-      const { id } = req.params;
+      const id = req.params.id as string;
       const updates = req.body;
       
       const item = await storage.updateActionItem(id, updates);
@@ -87,9 +142,9 @@ export async function registerRoutes(
     }
   });
 
-  app.delete("/api/action-items/:id", async (req, res) => {
+  app.delete("/api/action-items/:id", requireAuth, async (req, res) => {
     try {
-      const { id } = req.params;
+      const id = req.params.id as string;
       const success = await storage.deleteActionItem(id);
       if (!success) {
         return res.status(404).json({ error: "Item not found" });
@@ -100,12 +155,12 @@ export async function registerRoutes(
     }
   });
 
-  // EOD Tasks API
-  app.get("/api/eod-tasks", async (req, res) => {
+  // EOD Tasks API (protected)
+  app.get("/api/eod-tasks", requireAuth, async (req, res) => {
     try {
-      const user = await storage.getUserByUsername("j.doe");
+      const user = await getCurrentUser(req);
       if (!user) {
-        return res.status(404).json({ error: "User not found" });
+        return res.status(401).json({ error: "Not authenticated" });
       }
 
       const date = req.query.date as string || new Date().toISOString().split('T')[0];
@@ -122,9 +177,9 @@ export async function registerRoutes(
     }
   });
 
-  app.patch("/api/eod-tasks/:id", async (req, res) => {
+  app.patch("/api/eod-tasks/:id", requireAuth, async (req, res) => {
     try {
-      const { id } = req.params;
+      const id = req.params.id as string;
       const updates = req.body;
       
       const task = await storage.updateEodTask(id, updates);
@@ -137,12 +192,12 @@ export async function registerRoutes(
     }
   });
 
-  // Initialize demo data endpoint
-  app.post("/api/init-demo-data", async (req, res) => {
+  // Initialize demo data endpoint (protected)
+  app.post("/api/init-demo-data", requireAuth, async (req, res) => {
     try {
-      const user = await storage.getUserByUsername("j.doe");
+      const user = await getCurrentUser(req);
       if (!user) {
-        return res.status(404).json({ error: "User not found" });
+        return res.status(401).json({ error: "Not authenticated" });
       }
 
       // Check if demo data already exists

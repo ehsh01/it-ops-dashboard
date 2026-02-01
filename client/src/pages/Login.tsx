@@ -4,27 +4,70 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useState } from "react";
 import { useLocation } from "wouter";
-import { ShieldCheck, Loader2 } from "lucide-react";
+import { ShieldCheck, Loader2, AlertCircle } from "lucide-react";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { apiRequest } from "@/lib/queryClient";
 
 export default function Login() {
   const [_, setLocation] = useLocation();
-  const [isLoading, setIsLoading] = useState(false);
+  const [username, setUsername] = useState("");
+  const [password, setPassword] = useState("");
+  const [isRegister, setIsRegister] = useState(false);
+  const [displayName, setDisplayName] = useState("");
+  const [error, setError] = useState("");
+  const queryClient = useQueryClient();
 
-  const handleLogin = (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsLoading(true);
-    // Mock login delay
-    setTimeout(() => {
+  const loginMutation = useMutation({
+    mutationFn: async (data: { username: string; password: string }) => {
+      const res = await apiRequest("POST", "/api/auth/login", data);
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/user"] });
       setLocation("/");
-    }, 1500);
+    },
+    onError: (err: any) => {
+      setError(err.message || "Invalid username or password");
+    },
+  });
+
+  const registerMutation = useMutation({
+    mutationFn: async (data: { username: string; password: string; displayName: string }) => {
+      const res = await apiRequest("POST", "/api/auth/register", data);
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/user"] });
+      setLocation("/");
+    },
+    onError: (err: any) => {
+      setError(err.message || "Registration failed");
+    },
+  });
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    setError("");
+    
+    if (isRegister) {
+      if (!displayName.trim()) {
+        setError("Display name is required");
+        return;
+      }
+      registerMutation.mutate({ username, password, displayName });
+    } else {
+      loginMutation.mutate({ username, password });
+    }
   };
+
+  const isLoading = loginMutation.isPending || registerMutation.isPending;
 
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center p-4">
       <div className="w-full max-w-md space-y-8">
         <div className="text-center space-y-2">
           <div className="w-16 h-16 mx-auto flex items-center justify-center mb-4">
-             <img src="/um-logo.png" alt="University of Miami" className="w-full h-full object-contain" />
+             <img src="/um-logo.png" alt="University of Michigan" className="w-full h-full object-contain" />
           </div>
           <h1 className="text-2xl font-bold tracking-tight text-slate-900">
             UM IT Operations
@@ -36,43 +79,97 @@ export default function Login() {
 
         <Card className="border-slate-200 shadow-xl shadow-slate-200/50">
           <CardHeader>
-            <CardTitle>Sign in</CardTitle>
+            <CardTitle>{isRegister ? "Create Account" : "Sign in"}</CardTitle>
             <CardDescription>
-              Use your corporate Microsoft account
+              {isRegister ? "Set up your administrator account" : "Enter your credentials to continue"}
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <form onSubmit={handleLogin} className="space-y-4">
+            <form onSubmit={handleSubmit} className="space-y-4">
+              {error && (
+                <div className="flex items-center gap-2 p-3 bg-red-50 border border-red-200 rounded-md text-red-700 text-sm">
+                  <AlertCircle className="w-4 h-4 flex-shrink-0" />
+                  <span>{error}</span>
+                </div>
+              )}
+              
               <div className="space-y-2">
-                <Label htmlFor="email">Email</Label>
+                <Label htmlFor="username">Username</Label>
                 <Input 
-                  id="email" 
-                  placeholder="j.doe@miami.edu" 
-                  type="email" 
+                  id="username"
+                  data-testid="input-username"
+                  placeholder="Enter username" 
+                  type="text" 
                   className="bg-slate-50"
-                  defaultValue="admin@miami.edu"
+                  value={username}
+                  onChange={(e) => setUsername(e.target.value)}
+                  required
                 />
               </div>
+              
+              <div className="space-y-2">
+                <Label htmlFor="password">Password</Label>
+                <Input 
+                  id="password"
+                  data-testid="input-password"
+                  placeholder="Enter password" 
+                  type="password" 
+                  className="bg-slate-50"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  required
+                  minLength={isRegister ? 6 : 1}
+                />
+              </div>
+
+              {isRegister && (
+                <div className="space-y-2">
+                  <Label htmlFor="displayName">Display Name</Label>
+                  <Input 
+                    id="displayName"
+                    data-testid="input-display-name"
+                    placeholder="Your full name" 
+                    type="text" 
+                    className="bg-slate-50"
+                    value={displayName}
+                    onChange={(e) => setDisplayName(e.target.value)}
+                    required
+                  />
+                </div>
+              )}
+
               <Button 
                 type="submit" 
+                data-testid="button-submit"
                 className="w-full bg-primary hover:bg-primary/90 h-10 transition-all" 
                 disabled={isLoading}
               >
                 {isLoading ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Authenticating with MFA...
+                    {isRegister ? "Creating account..." : "Signing in..."}
                   </>
                 ) : (
-                  "Sign in with SSO"
+                  isRegister ? "Create Account" : "Sign In"
                 )}
               </Button>
             </form>
           </CardContent>
           <CardFooter className="flex flex-col gap-4 border-t bg-slate-50/50 p-6">
+            <Button 
+              variant="link" 
+              data-testid="button-toggle-mode"
+              className="text-sm"
+              onClick={() => {
+                setIsRegister(!isRegister);
+                setError("");
+              }}
+            >
+              {isRegister ? "Already have an account? Sign in" : "Need an account? Register"}
+            </Button>
             <div className="flex items-center gap-2 text-xs text-slate-500 justify-center">
               <ShieldCheck className="w-3 h-3" />
-              <span>Secured by Microsoft Entra ID</span>
+              <span>Secure Authentication</span>
             </div>
           </CardFooter>
         </Card>

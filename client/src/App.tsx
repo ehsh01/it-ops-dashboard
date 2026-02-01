@@ -1,6 +1,6 @@
-import { Switch, Route, useLocation } from "wouter";
-import { queryClient } from "./lib/queryClient";
-import { QueryClientProvider } from "@tanstack/react-query";
+import { Switch, Route, useLocation, Redirect } from "wouter";
+import { queryClient, getQueryFn } from "./lib/queryClient";
+import { QueryClientProvider, useQuery } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import NotFound from "@/pages/not-found";
@@ -9,16 +9,29 @@ import Login from "@/pages/Login";
 import Integrations from "@/pages/Integrations";
 import { AppShell } from "@/components/layout/AppShell";
 import { AppProvider } from "@/lib/context";
+import { Loader2 } from "lucide-react";
+import type { User } from "@shared/schema";
 
-function Router() {
-  const [location] = useLocation();
+function useUser() {
+  return useQuery<User | null>({
+    queryKey: ["/api/user"],
+    queryFn: getQueryFn({ on401: "returnNull" }),
+  });
+}
 
-  if (location === "/login") {
+function ProtectedRoutes() {
+  const { data: user, isLoading } = useUser();
+  
+  if (isLoading) {
     return (
-      <Switch>
-         <Route path="/login" component={Login} />
-      </Switch>
-    )
+      <div className="min-h-screen flex items-center justify-center bg-slate-50">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
+  
+  if (!user) {
+    return <Redirect to="/login" />;
   }
 
   return (
@@ -30,6 +43,34 @@ function Router() {
       </Switch>
     </AppShell>
   );
+}
+
+function AuthRoute() {
+  const { data: user, isLoading } = useUser();
+  
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-slate-50">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
+  
+  if (user) {
+    return <Redirect to="/" />;
+  }
+  
+  return <Login />;
+}
+
+function Router() {
+  const [location] = useLocation();
+
+  if (location === "/login") {
+    return <AuthRoute />;
+  }
+
+  return <ProtectedRoutes />;
 }
 
 function App() {

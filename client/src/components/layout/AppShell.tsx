@@ -12,10 +12,27 @@ import {
 import { cn } from "@/lib/utils";
 import { sidebarCounts } from "../dashboard/mockData";
 import { useAppState } from "@/lib/context";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { apiRequest } from "@/lib/queryClient";
 
 export function AppShell({ children }: { children: React.ReactNode }) {
-  const [location] = useLocation();
+  const [location, setLocation] = useLocation();
   const { criticalCount, eodComplete } = useAppState();
+  const queryClient = useQueryClient();
+
+  const logoutMutation = useMutation({
+    mutationFn: async () => {
+      await apiRequest("POST", "/api/auth/logout", {});
+    },
+    onSuccess: () => {
+      queryClient.clear();
+      setLocation("/login");
+    },
+  });
+
+  const handleLogout = () => {
+    logoutMutation.mutate();
+  };
 
   const navItems = [
     { label: "Dashboard", icon: LayoutDashboard, href: "/", count: criticalCount },
@@ -121,12 +138,15 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         </div>
 
         <div className="mt-auto p-6 border-t border-slate-50">
-           <Link href="/login">
-            <div className="flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium text-slate-500 hover:text-destructive hover:bg-destructive/5 transition-colors cursor-pointer">
-              <LogOut className="w-4 h-4" />
-              Sign Out
-            </div>
-          </Link>
+          <button
+            onClick={handleLogout}
+            disabled={logoutMutation.isPending}
+            data-testid="button-logout"
+            className="w-full flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium text-slate-500 hover:text-destructive hover:bg-destructive/5 transition-colors cursor-pointer disabled:opacity-50"
+          >
+            <LogOut className="w-4 h-4" />
+            {logoutMutation.isPending ? "Signing out..." : "Sign Out"}
+          </button>
         </div>
       </aside>
 
