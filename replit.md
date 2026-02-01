@@ -60,8 +60,17 @@ pm2 restart it-ops-dashboard
 
 ### Environment Variables (Production .env)
 - DATABASE_URL - PostgreSQL connection string (with sslmode=no-verify)
-- SESSION_SECRET - Secret for session encryption
+- SESSION_SECRET - **REQUIRED** - Secret for session encryption (generate with: `openssl rand -base64 32`)
 - NODE_ENV=production
+
+### After Adding Authentication
+Add SESSION_SECRET to production .env:
+```bash
+ssh root@129.212.182.125
+cd /var/www/it-ops-dashboard
+echo "SESSION_SECRET=$(openssl rand -base64 32)" >> .env
+pm2 restart it-ops-dashboard
+```
 
 ## Design Guidelines
 - Primary color: Orange (#F47321)
