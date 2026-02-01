@@ -1,0 +1,68 @@
+root@ubuntu-s-1vcpu-1gb-35gb-intel-atl1-01:/var/www/it-ops-dashboard# cd /var/www/it-ops-dashboardd
+git fetch origin
+git log --oneline -1 origin/main   # Shows latest commit on GitHub
+git log --oneline -1 HEAD          # Shows your current commit
+
+# If they're different, update:
+git reset --hard origin/main
+npm install
+npm run build
+npm run db:push
+pm2 restart it-ops-dashboard
+bf8d991 (HEAD -> main, origin/main, origin/HEAD) Add an admin panel for managing users and their roles
+bf8d991 (HEAD -> main, origin/main, origin/HEAD) Add an admin panel for managing users and their roles
+HEAD is now at bf8d991 Add an admin panel for managing users and their roles
+
+up to date, audited 403 packages in 2s
+
+53 packages are looking for funding
+  run `npm fund` for details
+
+5 moderate severity vulnerabilities
+
+To address issues that do not require attention, run:
+  npm audit fix
+
+To address all issues (including breaking changes), run:
+  npm audit fix --force
+
+Run `npm audit` for details.
+
+> rest-express@1.0.0 build
+> tsx script/build.ts
+
+building client...
+vite v7.3.1 building client environment for production...
+✓ 1847 modules transformed.
+rendering chunks (1)...[meta-images] no Replit deployment domain found, skipping meta tag updates
+../dist/public/index.html                   1.25 kB │ gzip:   0.56 kB
+../dist/public/assets/index-BKChMmUj.css  115.64 kB │ gzip:  18.79 kB
+../dist/public/assets/index-K8vMLtwt.js   441.92 kB │ gzip: 138.64 kB
+✓ built in 5.90s
+building server...
+
+  dist/index.cjs  1.0mb ⚠️
+
+⚡ Done in 305ms
+
+> rest-express@1.0.0 db:push
+> drizzle-kit push
+
+No config path provided, using default 'drizzle.config.ts'
+Reading config file '/var/www/it-ops-dashboard/drizzle.config.ts'
+Using 'pg' driver for database querying
+[✓] Pulling schema from database...
+[i] No changes detected
+Use --update-env to update environment variables
+[PM2] Applying action restartProcessId on app [it-ops-dashboard](ids: [ 48 ])
+[PM2] [it-ops-dashboard](48) ✓
+┌────┬────────────────────┬──────────┬──────┬───────────┬──────────┬──────────┐
+│ id │ name               │ mode     │ ↺    │ status    │ cpu      │ memory   │
+├────┼────────────────────┼──────────┼──────┼───────────┼──────────┼──────────┤
+│ 22 │ ezi-crm            │ fork     │ 12   │ online    │ 0%       │ 26.1mb   │
+│ 48 │ it-ops-dashboard   │ fork     │ 99   │ online    │ 0%       │ 17.6mb   │
+│ 46 │ psychiatry-api     │ cluster  │ 98   │ online    │ 0%       │ 25.2mb   │
+│ 0  │ reviewkeeper       │ fork     │ 56   │ online    │ 0%       │ 14.7mb   │
+│ 34 │ um-it-find         │ fork     │ 7    │ online    │ 0%       │ 19.4mb   │
+└────┴────────────────────┴──────────┴──────┴───────────┴──────────┴──────────┘
+root@ubuntu-s-1vcpu-1gb-35gb-intel-atl1-01:/var/www/it-ops-dashboard# 
