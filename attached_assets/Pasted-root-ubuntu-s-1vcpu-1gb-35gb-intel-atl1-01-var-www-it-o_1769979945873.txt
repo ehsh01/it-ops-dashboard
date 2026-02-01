@@ -1,0 +1,95 @@
+root@ubuntu-s-1vcpu-1gb-35gb-intel-atl1-01:/var/www/it-ops-dashboard# psql "postgresql://doadmin:AVNS_acaGLcqQkEAUsiISnJ3@reviewkeeper-db-do-user-26945572-0.i.db.ondigitalocean.com:25060/it_ops_dashboard?sslmode=require" -c "SELECT id, username, display_name, role FROM users;"
+                  id                  | username |   display_name    | role  
+--------------------------------------+----------+-------------------+-------
+ a4f1dc50-4c3a-4838-ae94-6c8466f91294 | j.doe    | J. Doe            | user
+ 2b3989fc-f82e-4eb5-a76b-985c8d599504 | ernie    | Ernesto Hernandez | user
+ 0f066999-c249-4544-ab68-97eedcb90d37 | admin    | Administrator     | admin
+(3 rows)
+
+root@ubuntu-s-1vcpu-1gb-35gb-intel-atl1-01:/var/www/it-ops-dashboard# pm2 logs it-ops-dashboard --lines 50
+[TAILING] Tailing last 50 lines for [it-ops-dashboard] process (change the value with --lines option)
+/root/.pm2/logs/it-ops-dashboard-error.log last 50 lines:
+48|it-ops- | nteger:Ka,interval:Mx,json:Dx,jsonb:Lx,line:Bx,macaddr:$x,macaddr8:zx,numeric:Ux,point:Qx,geometry:Hx,real:Gx,serial:Kx,smallint:Wx,smallserial:Zx,text:fe,time:Xx,timestamp:pi,uuid:Jx,varchar:Vt,bit:Yx,halfvec:eb,sparsevec:tb,vector:rb}}var jl=Symbol.for("drizzle:PgInlineForeignKeys"),ib=Symbol.for("drizzle:EnableRLS"),ye=class extends C{static[m]="PgTable";static Symbol=Object.assign({},C.Symbol,{InlineForeignKeys:jl,EnableRLS:ib});[jl]=[];[ib]=!1;[C.Symbol.ExtraConfigBuilder]=void 0};function rC(t,e,r,n,i=t){let a=new ye(t,n,i),s=typeof e=="function"?e(nb()):e,o=Object.fromEntries(Object.entries(s).map(([l,p])=>{let d=p;d.setName(l);let f=d.build(a);return a[jl].push(...d.buildForeignKeys(f,a)),[l,f]})),u=Object.fromEntries(Object.entries(s).map(([l,p])=>{let d=p;d.setName(l);let f=d.buildExtraConfigColumn(a);return[l,f]})),c=Object.assign(a,o);return c[C.Symbol.Columns]=o,c[C.Symbol.ExtraConfigColumns]=u,r&&(c[ye.Symbol.ExtraConfigBuilder]=r),Object.assign(c,{enableRLS:()=>(c[ye.Symbol.EnableRLS]=!0,c)})}var Wa=(t,e,r)=>rC(t,e,r,void 0);var Za=class{static[m]="PgPrimaryKeyBuilder";columns;name;constructor(e,r){this.columns=e,this.name=r}build(e){return new Rl(e,this.columns,this.name)}},Rl=class{constructor(e,r,n){this.table=e,this.columns=r,this.name=n}static[m]="PgPrimaryKey";columns;name;getName(){return this.name??`${this.table[ye.Symbol.Name]}_${this.columns.map(e=>e.name).join("_")}_pk`}};var Xa=class{constructor(e,r,n){this.sourceTable=e,this.referencedTable=r,this.relationName=n,this.referencedTableName=r[C.Symbol.Name]}static[m]="Relation";referencedTableName;fieldName},Fl=class{constructor(e,r){this.table=e,this.config=r}static[m]="Relations"},Ht=class t extends Xa{constructor(e,r,n,i){super(e,r,n?.relationName),this.config=n,this.isNullable=i}static[m]="One";withFieldName(e){let r=new t(this.sourceTable,this.referencedTable,this.config,this.isNullable);return r.fieldName=e,r}},fi=class t extends Xa{constructor(e,r,n){super(e,r,n?.relationName),this.config=n}static[m]="Many";withFieldName(e){let r=new t(this.sourceTable,this.referencedTable,this.config);return r.fieldName=e,r}};function ab(){return{and:mr,between:yx,eq:qe,exists:vx,gt:cx,gte:ux,ilike:Sx,inArray:dx,isNull:mx,isNotNull:hx,like:bx,lt:lx,lte:px,ne:ax,not:ox,notBetween:xx,notExists:gx,notLike:wx,notIlike:_x,notInArray:fx,or:sx,sql:h}}function sb(){return{sql:h,asc:Ex,desc:za}}function ob(t,e){Object.keys(t).length===1&&"default"in t&&!b(t.default,C)&&(t=t.default);let r={},n={},i={};for(let[a,s]of Object.entries(t))if(b(s,C)){let o=dr(s),u=n[o];r[o]=a,i[a]={tsName:a,dbName:s[C.Symbol.Name],schema:s[C.Symbol.Schema],columns:s[C.Symbol.Columns],relations:u?.relations??{},primaryKey:u?.primaryKey??[]};for(let l of Object.values(s[C.Symbol.Columns]))l.primary&&i[a].primaryKey.push(l);let c=s[C.Symbol.ExtraConfigBuilder]?.(s[C.Symbol.ExtraConfigColumns]);if(c)for(let l of Object.values(c))b(l,Za)&&i[a].primaryKey.push(...l.columns)}else if(b(s,Fl)){let o=dr(s.table),u=r[o],c=s.config(e(s.table)),l;for(let[p,d]of Object.entries(c))if(u){let f=i[u];f.relations[p]=d,l&&f.primaryKey.push(...l)}else o in n||(n[o]={relations:{},primaryKey:l}),n[o].relations[p]=d}return{tables:i,tableNamesMap:r}}function nC(t){return function(r,n){return new Ht(t,r,n,n?.fields.reduce((i,a)=>i&&a.notNull,!0)??!1)}}function iC(t){return function(r,n){return new fi(t,r,n)}}function cb(t,e,r){if(b(r,Ht)&&r.config)return{fields:r.config.fields,references:r.config.references};let n=e[dr(r.referencedTable)];if(!n)throw new Error(`Table "${r.referencedTable[C.Symbol.Name]}" not found in schema`);let i=t[n];if(!i)throw new Error(`Table "${n}" not found in schema`);let a=r.sourceTable,s=e[dr(a)];if(!s)throw new Error(`Table "${a[C.Symbol.Name]}" not found in schema`);let o=[];for(let u of Object.values(i.relations))(r.relationName&&r!==u&&u.relationName===r.relationName||!r.relationName&&u.referencedTable===r.sourceTable)&&o.push(u);if(o.length>1)throw r.relationName?new Error(`There are multiple relations with name "${r.relationName}" in table "${n}"`):new Error(`There are multiple relations between "${n}" and "${r.sourceTable[C.Symbol.Name]}". Please specify relation name`);if(o[0]&&b(o[0],Ht)&&o[0].config)return{fields:o[0].config.references,references:o[0].config.fields};throw new Error(`There is not enough information to infer relation "${s}.${r.fieldName}"`)}function ub(t){return{one:nC(t),many:iC(t)}}function Ja(t,e,r,n,i=a=>a){let a={};for(let[s,o]of n.entries())if(o.isJson){let u=e.relations[o.tsKey],c=r[s],l=typeof c=="string"?JSON.parse(c):c;a[o.tsKey]=b(u,Ht)?l&&Ja(t,t[o.relationTableTsKey],l,o.selection,i):l.map(p=>Ja(t,t[o.relationTableTsKey],p,o.selection,i))}else{let u=i(r[s]),c=o.field,l;b(c,G)?l=c:b(c,A)?l=c.decoder:l=c.sql.decoder,a[o.tsKey]=u===null?null:l.mapFromDriverValue(u)}return a}var ie=class t{static[m]="SelectionProxyHandler";config;constructor(e){this.config={...e}}get(e,r){if(r==="_")return{...e._,selectedFields:new Proxy(e._.selectedFields,this)};if(r===Z)return{...e[Z],selectedFields:new Proxy(e[Z].selectedFields,this)};if(typeof r=="symbol")return e[r];let i=(b(e,ue)?e._.selectedFields:b(e,Ie)?e[Z].selectedFields:e)[r];if(b(i,A.Aliased)){if(this.config.sqlAliasedBehavior==="sql"&&!i.isSelectionField)return i.sql;let a=i.clone();return a.isSelectionField=!0,a}if(b(i,A)){if(this.config.sqlBehavior==="sql")return i;throw new Error(`You tried to reference "${r}" field from a subquery, which is a raw SQL field, but it doesn't have an alias declared. Please add an alias to the field using ".as('alias')" method.`)}return b(i,G)?this.config.alias?new Proxy(i,new fr(new Proxy(i.table,new rn(this.config.alias,this.config.replaceOriginalName??!1)))):i:typeof i!="object"||i===null?i:new Proxy(i,new t(this.config))}};var mi=class extends Ce{constructor(e,r,n,i){super(),this.session=r,this.dialect=n,this.config={table:e,withList:i}}static[m]="PgDelete";config;where(e){return this.config.where=e,this}returning(e=this.config.table[C.Symbol.Columns]){return this.config.returningFields=e,this.config.returning=et(e),this}getSQL(){return this.dialect.buildDeleteQuery(this.config)}toSQL(){let{typings:e,...r}=this.dialect.sqlToQuery(this.getSQL());return r}_prepare(e){return W.startActiveSpan("drizzle.prepareQuery",()=>this.session.prepareQuery(this.dialect.sqlToQuery(this.getSQL()),this.config.returning,e,!0))}prepare(e){return this._prepare(e)}authToken;setToken(e){return this.authToken=e,this}execute=e=>W.startActiveSpan("drizzle.operation",()=>this._prepare().execute(e,this.authToken));getSelectedFields(){return this.config.returningFields?new Proxy(this.config.returningFields,new ie({alias:je(this.config.table),sqlAliasedBehavior:"alias",sqlBehavior:"error"})):void 0}$dynamic(){return this}};function aC(t){return(t.replace(/['\u2019]/g,"").match(/[\da-z]+|[A-Z]+(?![a-z])|[A-Z][\da-z]+/g)??[]).map(r=>r.toLowerCase()).join("_")}function sC(t){return(t.replace(/['\u2019]/g,"").match(/[\da-z]+|[A-Z]+(?![a-z])|[A-Z][\da-z]+/g)??[]).reduce((r,n,i)=>{let a=i===0?n.toLowerCase():`${n[0].toUpperCase()}${n.slice(1)}`;return r+a},"")}function oC(t){return t}var Ya=class{static[m]="CasingCache";cache={};cachedTables={};convert;constructor(e){this.convert=e==="snake_case"?aC:e==="camelCase"?sC:oC}getColumnCasing(e){if(!e.keyAsName)return e.name;let r=e.table[C.Symbol.Schema]??"public",n=e.table[C.Symbol.OriginalName],i=`${r}.${n}.${e.name}`;return this.cache[i]||this.cacheTable(e.table),this.cache[i]}cacheTable(e){let r=e[C.Symbol.Schema]??"public",n=e[C.Symbol.OriginalName],i=`${r}.${n}`;if(!this.cachedTables[i]){for(let a of Object.values(e[C.Symbol.Columns])){let s=`${i}.${a.name}`;this.cache[s]=this.convert(a.name)}this.cachedTables[i]=!0}}clearCache(){this.cache={},this.cachedTables={}}};var nn=class extends Ie{static[m]="PgViewBase"};var Gt=class{static[m]="PgDialect";casing;constructor(e){this.casing=new Ya(e?.casing)}async migrate(e,r,n){let i=typeof n=="string"?"__drizzle_migrations":n.migrationsTable??"__drizzle_migrations",a=typeof n=="string"?"drizzle":n.migrationsSchema??"drizzle",s=h`
+48|it-ops- |                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             
+48|it-ops- | 
+48|it-ops- | error: relation "users" does not exist
+48|it-ops- |     at /var/www/it-ops-dashboard/dist/index.cjs:59:14227
+48|it-ops- |     at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+48|it-ops- |     at async /var/www/it-ops-dashboard/dist/index.cjs:65:96955
+48|it-ops- |     at async Jp.getUserByUsername (/var/www/it-ops-dashboard/dist/index.cjs:65:100036)
+48|it-ops- |     at async /var/www/it-ops-dashboard/dist/index.cjs:65:101459 {
+48|it-ops- |   length: 104,
+48|it-ops- |   severity: 'ERROR',
+48|it-ops- |   code: '42P01',
+48|it-ops- |   detail: undefined,
+48|it-ops- |   hint: undefined,
+48|it-ops- |   position: '58',
+48|it-ops- |   internalPosition: undefined,
+48|it-ops- |   internalQuery: undefined,
+48|it-ops- |   where: undefined,
+48|it-ops- |   schema: undefined,
+48|it-ops- |   table: undefined,
+48|it-ops- |   column: undefined,
+48|it-ops- |   dataType: undefined,
+48|it-ops- |   constraint: undefined,
+48|it-ops- |   file: 'parse_relation.c',
+48|it-ops- |   line: '1466',
+48|it-ops- |   routine: 'parserOpenTable'
+48|it-ops- | }
+48|it-ops- | 
+48|it-ops- | Node.js v20.19.6
+48|it-ops- | Error: ENOENT: no such file or directory, stat '/var/www/it-ops-dashboard/dist/public/index.html'
+
+/root/.pm2/logs/it-ops-dashboard-out.log last 50 lines:
+48|it-ops- | 7:58:09 PM [express] GET /api/user 401 in 1ms :: {"error":"Not authenticated"}
+48|it-ops- | 7:58:19 PM [express] POST /api/auth/login 200 in 437ms :: {"id":"2b3989fc-f82e-4eb5-a76b-985c8d599504","username":"ernie","displayName":"Ernesto Hernandez"}
+48|it-ops- | 7:58:20 PM [express] GET /api/user 401 in 1ms :: {"error":"Not authenticated"}
+48|it-ops- | 
+48|it-ops- | > rest-express@1.0.0 start
+48|it-ops- | > NODE_ENV=production node dist/index.cjs
+48|it-ops- | 
+48|it-ops- | 8:10:02 PM [express] serving on port 5003
+48|it-ops- | 8:13:57 PM [express] GET /api/user 401 in 1ms :: {"error":"Not authenticated"}
+48|it-ops- | 8:14:17 PM [express] POST /api/auth/login 200 in 483ms :: {"id":"2b3989fc-f82e-4eb5-a76b-985c8d599504","username":"ernie","displayName":"Ernesto Hernandez"}
+48|it-ops- | 8:14:17 PM [express] GET /api/user 401 in 1ms :: {"error":"Not authenticated"}
+48|it-ops- | 8:16:01 PM [express] POST /api/auth/register 400 in 151ms :: {"error":"Username already exists"}
+48|it-ops- | 
+48|it-ops- | > rest-express@1.0.0 start
+48|it-ops- | > NODE_ENV=production node dist/index.cjs
+48|it-ops- | 
+48|it-ops- | 8:29:15 PM [express] serving on port 5003
+48|it-ops- | 8:29:27 PM [express] GET /api/user 401 in 2ms :: {"error":"Not authenticated"}
+48|it-ops- | 8:29:41 PM [express] POST /api/auth/login 200 in 481ms :: {"id":"2b3989fc-f82e-4eb5-a76b-985c8d599504","username":"ernie","displayName":"Ernesto Hernandez"}
+48|it-ops- | 8:29:41 PM [express] GET /api/user 401 in 1ms :: {"error":"Not authenticated"}
+48|it-ops- | 
+48|it-ops- | > rest-express@1.0.0 start
+48|it-ops- | > NODE_ENV=production node dist/index.cjs
+48|it-ops- | 
+48|it-ops- | 8:36:43 PM [express] serving on port 5003
+48|it-ops- | 8:36:51 PM [express] GET /api/user 401 in 3ms :: {"error":"Not authenticated"}
+48|it-ops- | 8:38:16 PM [express] POST /api/auth/login 500 in 221ms :: {"error":"column \"role\" does not exist"}
+48|it-ops- | 8:38:25 PM [express] POST /api/auth/login 500 in 166ms :: {"error":"column \"role\" does not exist"}
+48|it-ops- | 
+48|it-ops- | > rest-express@1.0.0 start
+48|it-ops- | > NODE_ENV=production node dist/index.cjs
+48|it-ops- | 
+48|it-ops- | 8:40:46 PM [express] serving on port 5003
+48|it-ops- | 8:55:09 PM [express] GET /api/user 401 in 1ms :: {"error":"Not authenticated"}
+48|it-ops- | 8:55:17 PM [express] POST /api/auth/login 401 in 183ms :: {"error":"Invalid username or password"}
+48|it-ops- | 8:55:25 PM [express] POST /api/auth/login 200 in 323ms :: {"id":"0f066999-c249-4544-ab68-97eedcb90d37","username":"admin","displayName":"Administrator","role":"admin"}
+48|it-ops- | 8:55:25 PM [express] GET /api/user 401 in 0ms :: {"error":"Not authenticated"}
+48|it-ops- | 8:55:39 PM [express] POST /api/auth/login 200 in 361ms :: {"id":"0f066999-c249-4544-ab68-97eedcb90d37","username":"admin","displayName":"Administrator","role":"admin"}
+48|it-ops- | 8:55:39 PM [express] GET /api/user 401 in 1ms :: {"error":"Not authenticated"}
+48|it-ops- | 8:55:59 PM [express] GET /api/user 401 in 0ms :: {"error":"Not authenticated"}
+48|it-ops- | 
+48|it-ops- | > rest-express@1.0.0 start
+48|it-ops- | > NODE_ENV=production node dist/index.cjs
+48|it-ops- | 
+48|it-ops- | 8:56:13 PM [express] serving on port 5003
+48|it-ops- | 8:56:21 PM [express] GET /api/user 401 in 2ms :: {"error":"Not authenticated"}
+48|it-ops- | 8:56:30 PM [express] POST /api/auth/login 200 in 439ms :: {"id":"0f066999-c249-4544-ab68-97eedcb90d37","username":"admin","displayName":"Administrator","role":"admin"}
+48|it-ops- | 8:56:30 PM [express] GET /api/user 401 in 3ms :: {"error":"Not authenticated"}
+48|it-ops- | 8:58:05 PM [express] POST /api/auth/login 200 in 433ms :: {"id":"0f066999-c249-4544-ab68-97eedcb90d37","username":"admin","displayName":"Administrator","role":"admin"}
+48|it-ops- | 8:58:05 PM [express] GET /api/user 401 in 1ms :: {"error":"Not authenticated"}
+
+
