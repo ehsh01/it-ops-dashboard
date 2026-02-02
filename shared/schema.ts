@@ -63,3 +63,19 @@ export const eodTasks = pgTable("eod_tasks", {
 export const insertEodTaskSchema = createInsertSchema(eodTasks).omit({ id: true });
 export type InsertEodTask = z.infer<typeof insertEodTaskSchema>;
 export type EodTask = typeof eodTasks.$inferSelect;
+
+// Microsoft OAuth Tokens table
+export const microsoftTokens = pgTable("microsoft_tokens", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").notNull().references(() => users.id, { onDelete: "cascade" }).unique(),
+  accessToken: text("access_token").notNull(),
+  refreshToken: text("refresh_token").notNull(),
+  expiresAt: timestamp("expires_at").notNull(),
+  scope: text("scope").notNull(),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+});
+
+export const insertMicrosoftTokenSchema = createInsertSchema(microsoftTokens).omit({ id: true, createdAt: true, updatedAt: true });
+export type InsertMicrosoftToken = z.infer<typeof insertMicrosoftTokenSchema>;
+export type MicrosoftToken = typeof microsoftTokens.$inferSelect;

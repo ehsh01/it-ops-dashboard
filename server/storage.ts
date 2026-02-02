@@ -2,12 +2,15 @@ import {
   users, 
   actionItems, 
   eodTasks,
+  microsoftTokens,
   type User, 
   type InsertUser,
   type ActionItem,
   type InsertActionItem,
   type EodTask,
-  type InsertEodTask
+  type InsertEodTask,
+  type MicrosoftToken,
+  type InsertMicrosoftToken
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, and, desc } from "drizzle-orm";
@@ -34,6 +37,12 @@ export interface IStorage {
   updateEodTask(id: string, updates: Partial<InsertEodTask>): Promise<EodTask | undefined>;
   deleteEodTask(id: string): Promise<boolean>;
   initializeDefaultEodTasks(userId: string, date: string): Promise<EodTask[]>;
+
+  // Microsoft Token operations
+  getMicrosoftToken(userId: string): Promise<MicrosoftToken | undefined>;
+  saveMicrosoftToken(token: InsertMicrosoftToken): Promise<MicrosoftToken>;
+  updateMicrosoftToken(userId: string, updates: Partial<InsertMicrosoftToken>): Promise<MicrosoftToken | undefined>;
+  deleteMicrosoftToken(userId: string): Promise<boolean>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -171,6 +180,46 @@ export class DatabaseStorage implements IStorage {
     );
 
     return createdTasks;
+  }
+
+  // Microsoft Token operations
+  async getMicrosoftToken(userId: string): Promise<MicrosoftToken | undefined> {
+    const [token] = await db.select().from(microsoftTokens).where(eq(microsoftTokens.userId, userId));
+    return token || undefined;
+  }
+
+  async saveMicrosoftToken(token: InsertMicrosoftToken): Promise<MicrosoftToken> {
+    const existing = await this.getMicrosoftToken(token.userId);
+    if (existing) {
+      const [updated] = await db
+        .update(microsoftTokens)
+        .set({ ...token, updatedAt: new Date() })
+        .where(eq(microsoftTokens.userId, token.userId))
+        .returning();
+      return updated;
+    }
+    const [newToken] = await db
+      .insert(microsoftTokens)
+      .values(token)
+      .returning();
+    return newToken;
+  }
+
+  async updateMicrosoftToken(userId: string, updates: Partial<InsertMicrosoftToken>): Promise<MicrosoftToken | undefined> {
+    const [updated] = await db
+      .update(microsoftTokens)
+      .set({ ...updates, updatedAt: new Date() })
+      .where(eq(microsoftTokens.userId, userId))
+      .returning();
+    return updated || undefined;
+  }
+
+  async deleteMicrosoftToken(userId: string): Promise<boolean> {
+    const result = await db
+      .delete(microsoftTokens)
+      .where(eq(microsoftTokens.userId, userId))
+      .returning();
+    return result.length > 0;
   }
 }
 
