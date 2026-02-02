@@ -4,6 +4,7 @@ import { storage } from "./storage";
 import { insertActionItemSchema, insertEodTaskSchema } from "@shared/schema";
 import { z } from "zod";
 import { authenticateUser, hashPassword, requireAuth, requireAdmin, getCurrentUser } from "./auth";
+import * as microsoft from "./microsoft";
 
 const loginSchema = z.object({
   username: z.string().min(1),
@@ -341,6 +342,115 @@ export async function registerRoutes(
         return res.status(404).json({ error: "User not found" });
       }
       res.json({ success: true });
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // Microsoft OAuth routes
+  app.get("/api/microsoft/status", requireAuth, async (req, res) => {
+    try {
+      const user = await getCurrentUser(req);
+      if (!user) {
+        return res.status(401).json({ error: "Not authenticated" });
+      }
+
+      const configured = microsoft.isConfigured();
+      const token = await storage.getMicrosoftToken(user.id);
+      
+      res.json({
+        configured,
+        connected: !!token,
+        expiresAt: token?.expiresAt || null,
+      });
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  app.get("/api/microsoft/authorize", requireAuth, async (req, res) => {
+    try {
+      if (!microsoft.isConfigured()) {
+        return res.status(400).json({ error: "Microsoft integration not configured" });
+      }
+
+      const user = await getCurrentUser(req);
+      if (!user) {
+        return res.status(401).json({ error: "Not authenticated" });
+      }
+
+      const state = Buffer.from(JSON.stringify({ userId: user.id })).toString("base64");
+      const authUrl = microsoft.getAuthorizationUrl(req, state);
+      
+      res.json({ authUrl });
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  app.get("/api/microsoft/callback", async (req, res) => {
+    try {
+      const { code, state, error } = req.query;
+      
+      if (error) {
+        return res.redirect("/integrations?error=" + encodeURIComponent(error as string));
+      }
+
+      if (!code || !state) {
+        return res.redirect("/integrations?error=missing_parameters");
+      }
+
+      const stateData = JSON.parse(Buffer.from(state as string, "base64").toString());
+      const userId = stateData.userId;
+
+      const tokens = await microsoft.exchangeCodeForTokens(req, code as string);
+      const expiresAt = new Date(Date.now() + tokens.expiresIn * 1000);
+
+      await storage.saveMicrosoftToken({
+        userId,
+        accessToken: tokens.accessToken,
+        refreshToken: tokens.refreshToken,
+        expiresAt,
+        scope: tokens.scope,
+      });
+
+      res.redirect("/integrations?success=microsoft_connected");
+    } catch (error: any) {
+      console.error("Microsoft OAuth callback error:", error);
+      res.redirect("/integrations?error=" + encodeURIComponent(error.message));
+    }
+  });
+
+  app.delete("/api/microsoft/disconnect", requireAuth, async (req, res) => {
+    try {
+      const user = await getCurrentUser(req);
+      if (!user) {
+        return res.status(401).json({ error: "Not authenticated" });
+      }
+
+      await storage.deleteMicrosoftToken(user.id);
+      res.json({ success: true });
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  app.get("/api/microsoft/emails", requireAuth, async (req, res) => {
+    try {
+      const user = await getCurrentUser(req);
+      if (!user) {
+        return res.status(401).json({ error: "Not authenticated" });
+      }
+
+      const accessToken = await microsoft.getValidAccessToken(user.id);
+      if (!accessToken) {
+        return res.status(401).json({ error: "Microsoft not connected or token expired" });
+      }
+
+      const count = parseInt(req.query.count as string) || 20;
+      const emails = await microsoft.fetchOutlookEmails(accessToken, count);
+      
+      res.json(emails);
     } catch (error: any) {
       res.status(500).json({ error: error.message });
     }
