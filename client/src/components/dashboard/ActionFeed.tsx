@@ -22,7 +22,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { useAppState } from "@/lib/context";
 import { useEffect } from "react";
-import { useActionItems, useUpdateActionItem, useInitDemoData } from "@/lib/api/queries";
+import { useActionItems, useUpdateActionItem } from "@/lib/api/queries";
 import type { ActionItem as ActionItemType } from "@shared/schema";
 
 type Source = "ticket" | "email" | "teams" | "calendar";
@@ -33,7 +33,6 @@ export function ActionFeed() {
   
   const { data: items = [], isLoading, error } = useActionItems();
   const updateItem = useUpdateActionItem();
-  const initDemo = useInitDemoData();
 
   const activeItems = items.filter(i => i.state === "action_required");
   const waitingItems = items.filter(i => i.state === "waiting");
@@ -45,13 +44,6 @@ export function ActionFeed() {
       setCriticalCount(activeItems.length);
     }
   }, [activeItems.length, criticalCount, setCriticalCount]);
-
-  // Initialize demo data if no items exist
-  useEffect(() => {
-    if (!isLoading && items.length === 0) {
-      initDemo.mutate();
-    }
-  }, [items.length, isLoading]);
 
   const handleComplete = (id: string) => {
     updateItem.mutate(
@@ -148,8 +140,8 @@ function FeedList({ items, type, onComplete }: { items: ActionItemType[], type: 
         <div className="w-12 h-12 bg-green-50 rounded-full flex items-center justify-center mx-auto mb-3 text-green-500">
             <CheckCircle2 className="w-6 h-6" />
         </div>
-        <p className="font-medium text-slate-700">All caught up!</p>
-        <p className="text-xs text-slate-400 mt-1">No pending items in this view.</p>
+        <p className="font-medium text-slate-700">No items yet</p>
+        <p className="text-xs text-slate-400 mt-1">Connect your accounts to start syncing action items.</p>
       </div>
     );
   }

@@ -11,7 +11,6 @@ import {
   Users
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { sidebarCounts } from "../dashboard/mockData";
 import { useAppState } from "@/lib/context";
 import { useMutation, useQueryClient, useQuery } from "@tanstack/react-query";
 import { apiRequest, getQueryFn } from "@/lib/queryClient";
@@ -45,9 +44,9 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 
   const navItems = [
     { label: "Dashboard", icon: LayoutDashboard, href: "/", count: criticalCount },
-    { label: "Tickets & Ops", icon: Ticket, href: "/tickets", count: sidebarCounts.tickets },
-    { label: "Integrations", icon: ShieldCheck, href: "/integrations", count: sidebarCounts.integrations },
-    { label: "System Health", icon: Activity, href: "/health", count: sidebarCounts.health },
+    { label: "Tickets & Ops", icon: Ticket, href: "/tickets", count: 0 },
+    { label: "Integrations", icon: ShieldCheck, href: "/integrations", count: 0 },
+    { label: "System Health", icon: Activity, href: "/health", count: 0 },
     ...(isAdmin ? [{ label: "Admin", icon: Users, href: "/admin", count: 0 }] : []),
   ];
 
