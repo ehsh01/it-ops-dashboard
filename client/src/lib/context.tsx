@@ -1,9 +1,8 @@
 import React, { createContext, useContext, useState } from 'react';
-import { mockActionItems } from '@/components/dashboard/mockData';
 
 type AppState = {
   criticalCount: number;
-  eodProgress: number; // 0 to 100
+  eodProgress: number;
   eodComplete: boolean;
   setCriticalCount: (count: number) => void;
   setEodProgress: (progress: number) => void;
@@ -13,11 +12,8 @@ type AppState = {
 const AppContext = createContext<AppState | undefined>(undefined);
 
 export function AppProvider({ children }: { children: React.ReactNode }) {
-  // Initialize with mock data count (2 critical items in mockData)
-  const [criticalCount, setCriticalCount] = useState(
-    mockActionItems.filter(i => i.state === 'action_required').length
-  );
-  const [eodProgress, setEodProgress] = useState(50); // Start at 50% as per initial EODChecklist state
+  const [criticalCount, setCriticalCount] = useState(0);
+  const [eodProgress, setEodProgress] = useState(0);
   const [eodComplete, setEodComplete] = useState(false);
 
   return (
