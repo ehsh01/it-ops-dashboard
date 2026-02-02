@@ -5,6 +5,7 @@ import { insertActionItemSchema, insertEodTaskSchema } from "@shared/schema";
 import { z } from "zod";
 import { authenticateUser, hashPassword, requireAuth, requireAdmin, getCurrentUser } from "./auth";
 import * as microsoft from "./microsoft";
+import { sendInvitationEmail, isEmailConfigured } from "./email";
 
 const loginSchema = z.object({
   username: z.string().min(1),
@@ -15,6 +16,11 @@ const registerSchema = z.object({
   username: z.string().min(3).max(50),
   password: z.string().min(6),
   displayName: z.string().min(1).max(100),
+  inviteToken: z.string().min(1),
+});
+
+const inviteSchema = z.object({
+  email: z.string().email(),
 });
 
 export async function registerRoutes(
@@ -54,7 +60,21 @@ export async function registerRoutes(
 
   app.post("/api/auth/register", async (req, res) => {
     try {
-      const { username, password, displayName } = registerSchema.parse(req.body);
+      const { username, password, displayName, inviteToken } = registerSchema.parse(req.body);
+      
+      // Validate invitation token
+      const invitation = await storage.getInvitationByToken(inviteToken);
+      if (!invitation) {
+        return res.status(400).json({ error: "Invalid invitation token" });
+      }
+      
+      if (invitation.status !== 'pending') {
+        return res.status(400).json({ error: "This invitation has already been used" });
+      }
+      
+      if (new Date(invitation.expiresAt) < new Date()) {
+        return res.status(400).json({ error: "This invitation has expired" });
+      }
       
       const existingUser = await storage.getUserByUsername(username);
       if (existingUser) {
@@ -68,6 +88,9 @@ export async function registerRoutes(
         displayName,
       });
       
+      // Mark invitation as accepted
+      await storage.acceptInvitation(inviteToken);
+      
       req.session.userId = user.id;
       const { password: _, ...userWithoutPassword } = user;
       res.json(userWithoutPassword);
@@ -76,6 +99,33 @@ export async function registerRoutes(
         return res.status(400).json({ error: error.errors });
       }
       res.status(500).json({ error: error.message });
+    }
+  });
+
+  // Validate invitation token (for checking before showing registration form)
+  app.get("/api/auth/validate-invite", async (req, res) => {
+    try {
+      const token = req.query.token as string;
+      if (!token) {
+        return res.status(400).json({ valid: false, error: "No token provided" });
+      }
+
+      const invitation = await storage.getInvitationByToken(token);
+      if (!invitation) {
+        return res.status(400).json({ valid: false, error: "Invalid invitation" });
+      }
+
+      if (invitation.status !== 'pending') {
+        return res.status(400).json({ valid: false, error: "Invitation already used" });
+      }
+
+      if (new Date(invitation.expiresAt) < new Date()) {
+        return res.status(400).json({ valid: false, error: "Invitation expired" });
+      }
+
+      res.json({ valid: true, email: invitation.email });
+    } catch (error: any) {
+      res.status(500).json({ valid: false, error: error.message });
     }
   });
 
@@ -342,6 +392,73 @@ export async function registerRoutes(
         return res.status(404).json({ error: "User not found" });
       }
       res.json({ success: true });
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // Invitation routes (admin only)
+  app.get("/api/admin/invitations", requireAdmin, async (req, res) => {
+    try {
+      const invitations = await storage.getAllInvitations();
+      res.json(invitations);
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  app.post("/api/admin/invitations", requireAdmin, async (req, res) => {
+    try {
+      const { email } = inviteSchema.parse(req.body);
+      const user = await getCurrentUser(req);
+      
+      if (!user) {
+        return res.status(401).json({ error: "Not authenticated" });
+      }
+
+      // Check if invitation already exists for this email
+      const existing = await storage.getInvitationByEmail(email);
+      if (existing && existing.status === 'pending') {
+        return res.status(400).json({ error: "An invitation has already been sent to this email" });
+      }
+
+      const invitation = await storage.createInvitation(email, user.id);
+
+      // Try to send email
+      const emailSent = await sendInvitationEmail(email, invitation.token, user.displayName);
+      
+      res.json({ 
+        invitation, 
+        emailSent,
+        message: emailSent 
+          ? "Invitation sent successfully" 
+          : "Invitation created but email could not be sent. Share the link manually."
+      });
+    } catch (error: any) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ error: "Invalid email format" });
+      }
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  app.delete("/api/admin/invitations/:id", requireAdmin, async (req, res) => {
+    try {
+      const id = req.params.id as string;
+      const deleted = await storage.deleteInvitation(id);
+      if (!deleted) {
+        return res.status(404).json({ error: "Invitation not found" });
+      }
+      res.json({ success: true });
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  app.get("/api/admin/email-status", requireAdmin, async (req, res) => {
+    try {
+      const configured = await isEmailConfigured();
+      res.json({ configured });
     } catch (error: any) {
       res.status(500).json({ error: error.message });
     }

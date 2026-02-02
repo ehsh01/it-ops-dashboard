@@ -3,6 +3,7 @@ import {
   actionItems, 
   eodTasks,
   microsoftTokens,
+  invitations,
   type User, 
   type InsertUser,
   type ActionItem,
@@ -10,10 +11,13 @@ import {
   type EodTask,
   type InsertEodTask,
   type MicrosoftToken,
-  type InsertMicrosoftToken
+  type InsertMicrosoftToken,
+  type Invitation,
+  type InsertInvitation
 } from "@shared/schema";
 import { db } from "./db";
-import { eq, and, desc } from "drizzle-orm";
+import { eq, and, desc, lt } from "drizzle-orm";
+import crypto from "crypto";
 
 export interface IStorage {
   // User operations
@@ -43,6 +47,14 @@ export interface IStorage {
   saveMicrosoftToken(token: InsertMicrosoftToken): Promise<MicrosoftToken>;
   updateMicrosoftToken(userId: string, updates: Partial<InsertMicrosoftToken>): Promise<MicrosoftToken | undefined>;
   deleteMicrosoftToken(userId: string): Promise<boolean>;
+
+  // Invitation operations
+  createInvitation(email: string, invitedBy: string): Promise<Invitation>;
+  getInvitationByToken(token: string): Promise<Invitation | undefined>;
+  getInvitationByEmail(email: string): Promise<Invitation | undefined>;
+  getAllInvitations(): Promise<Invitation[]>;
+  acceptInvitation(token: string): Promise<Invitation | undefined>;
+  deleteInvitation(id: string): Promise<boolean>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -218,6 +230,67 @@ export class DatabaseStorage implements IStorage {
     const result = await db
       .delete(microsoftTokens)
       .where(eq(microsoftTokens.userId, userId))
+      .returning();
+    return result.length > 0;
+  }
+
+  // Invitation operations
+  async createInvitation(email: string, invitedBy: string): Promise<Invitation> {
+    const token = crypto.randomBytes(32).toString('hex');
+    const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000); // 7 days
+
+    const [invitation] = await db
+      .insert(invitations)
+      .values({
+        email,
+        token,
+        invitedBy,
+        status: 'pending',
+        expiresAt,
+      })
+      .returning();
+    return invitation;
+  }
+
+  async getInvitationByToken(token: string): Promise<Invitation | undefined> {
+    const [invitation] = await db
+      .select()
+      .from(invitations)
+      .where(eq(invitations.token, token));
+    return invitation || undefined;
+  }
+
+  async getInvitationByEmail(email: string): Promise<Invitation | undefined> {
+    const [invitation] = await db
+      .select()
+      .from(invitations)
+      .where(eq(invitations.email, email));
+    return invitation || undefined;
+  }
+
+  async getAllInvitations(): Promise<Invitation[]> {
+    return db
+      .select()
+      .from(invitations)
+      .orderBy(desc(invitations.createdAt));
+  }
+
+  async acceptInvitation(token: string): Promise<Invitation | undefined> {
+    const [updated] = await db
+      .update(invitations)
+      .set({ 
+        status: 'accepted',
+        acceptedAt: new Date()
+      })
+      .where(eq(invitations.token, token))
+      .returning();
+    return updated || undefined;
+  }
+
+  async deleteInvitation(id: string): Promise<boolean> {
+    const result = await db
+      .delete(invitations)
+      .where(eq(invitations.id, id))
       .returning();
     return result.length > 0;
   }

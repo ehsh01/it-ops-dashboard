@@ -79,3 +79,19 @@ export const microsoftTokens = pgTable("microsoft_tokens", {
 export const insertMicrosoftTokenSchema = createInsertSchema(microsoftTokens).omit({ id: true, createdAt: true, updatedAt: true });
 export type InsertMicrosoftToken = z.infer<typeof insertMicrosoftTokenSchema>;
 export type MicrosoftToken = typeof microsoftTokens.$inferSelect;
+
+// Invitations table for invitation-only registration
+export const invitations = pgTable("invitations", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  email: text("email").notNull(),
+  token: text("token").notNull().unique(),
+  invitedBy: varchar("invited_by").notNull().references(() => users.id, { onDelete: "cascade" }),
+  status: text("status").notNull().default("pending"), // 'pending' | 'accepted' | 'expired'
+  expiresAt: timestamp("expires_at").notNull(),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  acceptedAt: timestamp("accepted_at"),
+});
+
+export const insertInvitationSchema = createInsertSchema(invitations).omit({ id: true, createdAt: true, acceptedAt: true });
+export type InsertInvitation = z.infer<typeof insertInvitationSchema>;
+export type Invitation = typeof invitations.$inferSelect;

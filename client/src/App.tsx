@@ -68,7 +68,7 @@ function AuthRoute() {
 function Router() {
   const [location] = useLocation();
 
-  if (location === "/login") {
+  if (location === "/login" || location.startsWith("/register")) {
     return <AuthRoute />;
   }
 
