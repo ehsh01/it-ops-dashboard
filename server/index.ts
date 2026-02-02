@@ -12,6 +12,10 @@ import pg from "pg";
 const app = express();
 const httpServer = createServer(app);
 
+// Trust proxy - must be set before rate limiter
+// Enabled in all environments for Replit's proxy setup
+app.set("trust proxy", 1);
+
 declare module "http" {
   interface IncomingMessage {
     rawBody: unknown;
@@ -66,11 +70,6 @@ app.use(
 );
 
 app.use(express.urlencoded({ extended: false, limit: "10kb" }));
-
-// Trust proxy for secure cookies behind Nginx
-if (process.env.NODE_ENV === "production") {
-  app.set("trust proxy", 1);
-}
 
 const PgStore = pgSession(session);
 const pool = new pg.Pool({
