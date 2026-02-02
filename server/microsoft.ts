@@ -4,7 +4,18 @@ const MICROSOFT_CLIENT_ID = process.env.MICROSOFT_CLIENT_ID;
 const MICROSOFT_CLIENT_SECRET = process.env.MICROSOFT_CLIENT_SECRET;
 const MICROSOFT_TENANT_ID = process.env.MICROSOFT_TENANT_ID || "common";
 
-const SCOPES = ["openid", "profile", "email", "offline_access", "Mail.Read", "User.Read"];
+const SCOPES = [
+  "openid", 
+  "profile", 
+  "email", 
+  "offline_access", 
+  "Mail.Read", 
+  "User.Read",
+  "Chat.Read",           // Read user's chats
+  "ChatMessage.Read",    // Read chat messages
+  "Team.ReadBasic.All",  // List user's teams
+  "ChannelMessage.Read.All", // Read channel messages (requires admin consent)
+];
 
 function getRedirectUri(req: any): string {
   const protocol = req.headers["x-forwarded-proto"] || req.protocol || "http";
@@ -155,4 +166,132 @@ export async function fetchOutlookEmails(accessToken: string, count: number = 20
 
 export function isConfigured(): boolean {
   return !!(MICROSOFT_CLIENT_ID && MICROSOFT_CLIENT_SECRET);
+}
+
+// Teams API functions
+
+export async function fetchTeamsChats(accessToken: string): Promise<any[]> {
+  const response = await fetch(
+    `https://graph.microsoft.com/v1.0/me/chats?$top=50&$orderby=lastMessagePreview/createdDateTime desc`,
+    {
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+      },
+    }
+  );
+  
+  if (!response.ok) {
+    const error = await response.text();
+    throw new Error(`Failed to fetch chats: ${error}`);
+  }
+  
+  const data = await response.json();
+  return data.value || [];
+}
+
+export async function fetchChatMessages(accessToken: string, chatId: string, count: number = 20): Promise<any[]> {
+  const response = await fetch(
+    `https://graph.microsoft.com/v1.0/me/chats/${chatId}/messages?$top=${count}&$orderby=createdDateTime desc`,
+    {
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+      },
+    }
+  );
+  
+  if (!response.ok) {
+    const error = await response.text();
+    throw new Error(`Failed to fetch chat messages: ${error}`);
+  }
+  
+  const data = await response.json();
+  return data.value || [];
+}
+
+export async function fetchUserTeams(accessToken: string): Promise<any[]> {
+  const response = await fetch(
+    `https://graph.microsoft.com/v1.0/me/joinedTeams`,
+    {
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+      },
+    }
+  );
+  
+  if (!response.ok) {
+    const error = await response.text();
+    throw new Error(`Failed to fetch teams: ${error}`);
+  }
+  
+  const data = await response.json();
+  return data.value || [];
+}
+
+export async function fetchTeamChannels(accessToken: string, teamId: string): Promise<any[]> {
+  const response = await fetch(
+    `https://graph.microsoft.com/v1.0/teams/${teamId}/channels`,
+    {
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+      },
+    }
+  );
+  
+  if (!response.ok) {
+    const error = await response.text();
+    throw new Error(`Failed to fetch channels: ${error}`);
+  }
+  
+  const data = await response.json();
+  return data.value || [];
+}
+
+export async function fetchChannelMessages(accessToken: string, teamId: string, channelId: string, count: number = 20): Promise<any[]> {
+  const response = await fetch(
+    `https://graph.microsoft.com/v1.0/teams/${teamId}/channels/${channelId}/messages?$top=${count}`,
+    {
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+      },
+    }
+  );
+  
+  if (!response.ok) {
+    const error = await response.text();
+    throw new Error(`Failed to fetch channel messages: ${error}`);
+  }
+  
+  const data = await response.json();
+  return data.value || [];
+}
+
+// Fetch messages where user is mentioned
+export async function fetchTeamsMentions(accessToken: string): Promise<any[]> {
+  const mentions: any[] = [];
+  
+  try {
+    // Get recent chats and check for mentions
+    const chats = await fetchTeamsChats(accessToken);
+    
+    for (const chat of chats.slice(0, 10)) {
+      try {
+        const messages = await fetchChatMessages(accessToken, chat.id, 10);
+        for (const msg of messages) {
+          if (msg.mentions && msg.mentions.length > 0) {
+            mentions.push({
+              ...msg,
+              chatId: chat.id,
+              chatTopic: chat.topic || "Direct Chat",
+            });
+          }
+        }
+      } catch (e) {
+        // Skip chats we can't access
+      }
+    }
+  } catch (e) {
+    console.error("Error fetching Teams mentions:", e);
+  }
+  
+  return mentions;
 }

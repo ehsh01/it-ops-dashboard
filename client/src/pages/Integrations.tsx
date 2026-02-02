@@ -214,18 +214,52 @@ export default function Integrations() {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="p-4 border rounded-lg bg-slate-50">
-            <div className="flex items-start gap-3">
-              <AlertTriangle className="h-5 w-5 text-slate-400 mt-0.5" />
-              <div>
-                <p className="font-medium text-slate-600">Requires Admin Consent</p>
-                <p className="text-sm text-slate-500 mt-1">
-                  Teams integration requires your IT administrator to approve the ChannelMessage.Read.All permission. 
-                  Consider forwarding important Teams notifications to your email instead.
-                </p>
+          {isConnected ? (
+            <div className="space-y-4">
+              <div className="flex items-center justify-between p-4 border rounded-lg bg-green-50 border-green-200">
+                <div className="flex items-center gap-3">
+                  <div className="p-2 bg-white border rounded shadow-sm">
+                    <Users className="w-6 h-6 text-[#6264A7]" />
+                  </div>
+                  <div>
+                    <p className="font-medium text-green-800">Teams Connected</p>
+                    <p className="text-sm text-green-600">
+                      Your Teams chats and channels are being synced
+                    </p>
+                  </div>
+                </div>
+                <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
+                  <span className="w-1.5 h-1.5 rounded-full bg-green-600 mr-2 animate-pulse"></span>
+                  Active
+                </Badge>
+              </div>
+              <div className="p-4 border rounded-lg bg-amber-50 border-amber-200">
+                <div className="flex items-start gap-3">
+                  <AlertTriangle className="h-5 w-5 text-amber-600 mt-0.5" />
+                  <div>
+                    <p className="font-medium text-amber-800">Channel Messages Require Admin Consent</p>
+                    <p className="text-sm text-amber-700 mt-1">
+                      Reading channel messages requires your IT administrator to grant admin consent for the app. 
+                      Personal chats and @mentions should work without admin consent.
+                    </p>
+                  </div>
+                </div>
               </div>
             </div>
-          </div>
+          ) : (
+            <div className="p-4 border rounded-lg bg-slate-50">
+              <div className="flex items-start gap-3">
+                <AlertTriangle className="h-5 w-5 text-slate-400 mt-0.5" />
+                <div>
+                  <p className="font-medium text-slate-600">Connect Microsoft First</p>
+                  <p className="text-sm text-slate-500 mt-1">
+                    Teams integration is included when you connect your Microsoft account above. 
+                    Connect your Microsoft account to enable Teams sync.
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
         </CardContent>
       </Card>
     </div>

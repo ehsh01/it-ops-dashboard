@@ -456,5 +456,103 @@ export async function registerRoutes(
     }
   });
 
+  // Teams API routes
+  app.get("/api/microsoft/teams", requireAuth, async (req, res) => {
+    try {
+      const user = await getCurrentUser(req);
+      if (!user) {
+        return res.status(401).json({ error: "Not authenticated" });
+      }
+
+      const accessToken = await microsoft.getValidAccessToken(user.id);
+      if (!accessToken) {
+        return res.status(401).json({ error: "Microsoft not connected or token expired" });
+      }
+
+      const teams = await microsoft.fetchUserTeams(accessToken);
+      res.json(teams);
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  app.get("/api/microsoft/teams/:teamId/channels", requireAuth, async (req, res) => {
+    try {
+      const user = await getCurrentUser(req);
+      if (!user) {
+        return res.status(401).json({ error: "Not authenticated" });
+      }
+
+      const accessToken = await microsoft.getValidAccessToken(user.id);
+      if (!accessToken) {
+        return res.status(401).json({ error: "Microsoft not connected or token expired" });
+      }
+
+      const channels = await microsoft.fetchTeamChannels(accessToken, String(req.params.teamId));
+      res.json(channels);
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  app.get("/api/microsoft/teams/:teamId/channels/:channelId/messages", requireAuth, async (req, res) => {
+    try {
+      const user = await getCurrentUser(req);
+      if (!user) {
+        return res.status(401).json({ error: "Not authenticated" });
+      }
+
+      const accessToken = await microsoft.getValidAccessToken(user.id);
+      if (!accessToken) {
+        return res.status(401).json({ error: "Microsoft not connected or token expired" });
+      }
+
+      const count = parseInt(req.query.count as string) || 20;
+      const messages = await microsoft.fetchChannelMessages(accessToken, String(req.params.teamId), String(req.params.channelId), count);
+      res.json(messages);
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  app.get("/api/microsoft/chats", requireAuth, async (req, res) => {
+    try {
+      const user = await getCurrentUser(req);
+      if (!user) {
+        return res.status(401).json({ error: "Not authenticated" });
+      }
+
+      const accessToken = await microsoft.getValidAccessToken(user.id);
+      if (!accessToken) {
+        return res.status(401).json({ error: "Microsoft not connected or token expired" });
+      }
+
+      const chats = await microsoft.fetchTeamsChats(accessToken);
+      res.json(chats);
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  app.get("/api/microsoft/chats/:chatId/messages", requireAuth, async (req, res) => {
+    try {
+      const user = await getCurrentUser(req);
+      if (!user) {
+        return res.status(401).json({ error: "Not authenticated" });
+      }
+
+      const accessToken = await microsoft.getValidAccessToken(user.id);
+      if (!accessToken) {
+        return res.status(401).json({ error: "Microsoft not connected or token expired" });
+      }
+
+      const count = parseInt(req.query.count as string) || 20;
+      const messages = await microsoft.fetchChatMessages(accessToken, String(req.params.chatId), count);
+      res.json(messages);
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
   return httpServer;
 }
