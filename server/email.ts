@@ -1,9 +1,18 @@
-// Email service using Resend integration
 import { Resend } from 'resend';
 
-let connectionSettings: any;
+let cachedCredentials: { apiKey: string; fromEmail: string } | null = null;
 
-async function getCredentials() {
+async function getCredentials(): Promise<{ apiKey: string; fromEmail: string }> {
+  if (cachedCredentials) return cachedCredentials;
+
+  if (process.env.RESEND_API_KEY) {
+    cachedCredentials = {
+      apiKey: process.env.RESEND_API_KEY,
+      fromEmail: process.env.RESEND_FROM_EMAIL || 'IT Ops Console <noreply@itopsconsole.com>',
+    };
+    return cachedCredentials;
+  }
+
   const hostname = process.env.REPLIT_CONNECTORS_HOSTNAME;
   const xReplitToken = process.env.REPL_IDENTITY 
     ? 'repl ' + process.env.REPL_IDENTITY 
@@ -11,11 +20,11 @@ async function getCredentials() {
     ? 'depl ' + process.env.WEB_REPL_RENEWAL 
     : null;
 
-  if (!xReplitToken) {
-    throw new Error('X_REPLIT_TOKEN not found for repl/depl');
+  if (!xReplitToken || !hostname) {
+    throw new Error('Email not configured. Set RESEND_API_KEY or connect Resend in Replit.');
   }
 
-  connectionSettings = await fetch(
+  const data = await fetch(
     'https://' + hostname + '/api/v2/connection?include_secrets=true&connector_names=resend',
     {
       headers: {
@@ -23,15 +32,19 @@ async function getCredentials() {
         'X_REPLIT_TOKEN': xReplitToken
       }
     }
-  ).then(res => res.json()).then(data => data.items?.[0]);
+  ).then(res => res.json());
 
-  if (!connectionSettings || (!connectionSettings.settings.api_key)) {
+  const connectionSettings = data.items?.[0];
+
+  if (!connectionSettings || !connectionSettings.settings.api_key) {
     throw new Error('Resend not connected');
   }
-  return {
-    apiKey: connectionSettings.settings.api_key, 
-    fromEmail: connectionSettings.settings.from_email
+
+  cachedCredentials = {
+    apiKey: connectionSettings.settings.api_key,
+    fromEmail: connectionSettings.settings.from_email || 'IT Ops Console <noreply@itopsconsole.com>',
   };
+  return cachedCredentials;
 }
 
 async function getResendClient() {
@@ -50,14 +63,13 @@ export async function sendInvitationEmail(
   try {
     const { client, fromEmail } = await getResendClient();
     
-    const baseUrl = process.env.NODE_ENV === 'production' 
-      ? 'https://itopsconsole.com' 
-      : 'http://localhost:5000';
+    const baseUrl = process.env.APP_URL 
+      || (process.env.NODE_ENV === 'production' ? 'https://itopsconsole.com' : 'http://localhost:5000');
     
     const inviteUrl = `${baseUrl}/register?token=${inviteToken}`;
     
     await client.emails.send({
-      from: fromEmail || 'IT Ops Console <noreply@itopsconsole.com>',
+      from: fromEmail,
       to: toEmail,
       subject: 'You\'ve been invited to IT Ops Console',
       html: `
