@@ -1,0 +1,42 @@
+root@ubuntu-s-1vcpu-1gb-35gb-intel-atl1-01:/var/www/it-ops-dashboard# git fetch origin && git reset --hard origin/main
+npm run build
+pm2 restart it-ops-dashboard
+remote: Enumerating objects: 16, done.
+remote: Counting objects: 100% (16/16), done.
+remote: Compressing objects: 100% (3/3), done.
+remote: Total 12 (delta 9), reused 12 (delta 9), pack-reused 0 (from 0)
+Unpacking objects: 100% (12/12), 24.52 KiB | 1.44 MiB/s, done.
+From https://github.com/ehsh01/it-ops-dashboard
+   66ab453..d1443f6  main       -> origin/main
+HEAD is now at d1443f6 Enable sending emails from production and development environments
+
+> rest-express@1.0.0 build
+> tsx script/build.ts
+
+building client...
+vite v7.3.1 building client environment for production...
+✓ 1843 modules transformed.
+rendering chunks (1)...[meta-images] no Replit deployment domain found, skipping meta tag updates
+../dist/public/index.html                   1.25 kB │ gzip:   0.56 kB
+../dist/public/assets/index-Cm8jMhuv.css  116.05 kB │ gzip:  18.88 kB
+../dist/public/assets/index-CON7ExRg.js   448.17 kB │ gzip: 139.77 kB
+✓ built in 6.04s
+building server...
+
+  dist/index.cjs  1.1mb ⚠️
+
+⚡ Done in 277ms
+Use --update-env to update environment variables
+[PM2] Applying action restartProcessId on app [it-ops-dashboard](ids: [ 48 ])
+[PM2] [it-ops-dashboard](48) ✓
+┌────┬────────────────────┬──────────┬──────┬───────────┬──────────┬──────────┐
+│ id │ name               │ mode     │ ↺    │ status    │ cpu      │ memory   │
+├────┼────────────────────┼──────────┼──────┼───────────┼──────────┼──────────┤
+│ 56 │ abaworkspace       │ fork     │ 0    │ online    │ 0%       │ 17.9mb   │
+│ 22 │ ezi-crm            │ fork     │ 13   │ online    │ 0%       │ 22.2mb   │
+│ 48 │ it-ops-dashboard   │ fork     │ 151  │ online    │ 0%       │ 18.6mb   │
+│ 46 │ psychiatry-api     │ cluster  │ 105  │ online    │ 0%       │ 20.3mb   │
+│ 0  │ reviewkeeper       │ fork     │ 57   │ online    │ 0%       │ 15.9mb   │
+│ 34 │ um-it-find         │ fork     │ 8    │ online    │ 0%       │ 15.7mb   │
+└────┴────────────────────┴──────────┴──────┴───────────┴──────────┴──────────┘
+root@ubuntu-s-1vcpu-1gb-35gb-intel-atl1-01:/var/www/it-ops-dashboard#
