@@ -1,0 +1,52 @@
+root@ubuntu-s-1vcpu-1gb-35gb-intel-atl1-01:/var/www/it-ops-dashboard# echo "re_4ZkAPWyX_Nm84X4YFWJU6pRD7DmxfdApj" >> .env
+git fetch origin && git reset --hard origin/main
+npm install
+npm run build
+pm2 restart it-ops-dashboard
+HEAD is now at 66ab453 Add missing database table for managing user invitations
+
+up to date, audited 480 packages in 1s
+
+80 packages are looking for funding
+  run `npm fund` for details
+
+6 vulnerabilities (1 low, 5 moderate)
+
+To address issues that do not require attention, run:
+  npm audit fix
+
+To address all issues (including breaking changes), run:
+  npm audit fix --force
+
+Run `npm audit` for details.
+
+> rest-express@1.0.0 build
+> tsx script/build.ts
+
+building client...
+vite v7.3.1 building client environment for production...
+✓ 1843 modules transformed.
+rendering chunks (1)...[meta-images] no Replit deployment domain found, skipping meta tag updates
+../dist/public/index.html                   1.25 kB │ gzip:   0.56 kB
+../dist/public/assets/index-Cm8jMhuv.css  116.05 kB │ gzip:  18.88 kB
+../dist/public/assets/index-CON7ExRg.js   448.17 kB │ gzip: 139.77 kB
+✓ built in 6.29s
+building server...
+
+  dist/index.cjs  1.1mb ⚠️
+
+⚡ Done in 427ms
+Use --update-env to update environment variables
+[PM2] Applying action restartProcessId on app [it-ops-dashboard](ids: [ 48 ])
+[PM2] [it-ops-dashboard](48) ✓
+┌────┬────────────────────┬──────────┬──────┬───────────┬──────────┬──────────┐
+│ id │ name               │ mode     │ ↺    │ status    │ cpu      │ memory   │
+├────┼────────────────────┼──────────┼──────┼───────────┼──────────┼──────────┤
+│ 56 │ abaworkspace       │ fork     │ 0    │ online    │ 0%       │ 18.1mb   │
+│ 22 │ ezi-crm            │ fork     │ 13   │ online    │ 0%       │ 21.9mb   │
+│ 48 │ it-ops-dashboard   │ fork     │ 150  │ online    │ 0%       │ 27.8mb   │
+│ 46 │ psychiatry-api     │ cluster  │ 105  │ online    │ 0%       │ 20.2mb   │
+│ 0  │ reviewkeeper       │ fork     │ 57   │ online    │ 0%       │ 15.9mb   │
+│ 34 │ um-it-find         │ fork     │ 8    │ online    │ 0%       │ 15.7mb   │
+└────┴────────────────────┴──────────┴──────┴───────────┴──────────┴──────────┘
+root@ubuntu-s-1vcpu-1gb-35gb-intel-atl1-01:/var/www/it-ops-dashboard#
