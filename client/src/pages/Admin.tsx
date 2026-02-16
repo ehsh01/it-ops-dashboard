@@ -41,6 +41,7 @@ type Invitation = {
   id: string;
   email: string;
   token: string;
+  role: string;
   status: string;
   expiresAt: string;
   createdAt: string;
@@ -52,6 +53,7 @@ export default function Admin() {
   const [resetPasswordUserId, setResetPasswordUserId] = useState<string | null>(null);
   const [newPassword, setNewPassword] = useState("");
   const [inviteEmail, setInviteEmail] = useState("");
+  const [inviteRole, setInviteRole] = useState("user");
   const [showInviteDialog, setShowInviteDialog] = useState(false);
 
   const { data: users, isLoading: usersLoading } = useQuery<UserWithoutPassword[]>({
@@ -111,13 +113,14 @@ export default function Admin() {
   });
 
   const sendInviteMutation = useMutation({
-    mutationFn: async (email: string) => {
-      const res = await apiRequest("POST", "/api/admin/invitations", { email });
+    mutationFn: async ({ email, role }: { email: string; role: string }) => {
+      const res = await apiRequest("POST", "/api/admin/invitations", { email, role });
       return res.json();
     },
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ["/api/admin/invitations"] });
       setInviteEmail("");
+      setInviteRole("user");
       setShowInviteDialog(false);
       toast({ 
         title: data.emailSent ? "Invitation Sent" : "Invitation Created", 
@@ -228,6 +231,18 @@ export default function Admin() {
                     data-testid="input-invite-email"
                   />
                 </div>
+                <div className="space-y-2">
+                  <Label htmlFor="invite-role">Role</Label>
+                  <Select value={inviteRole} onValueChange={setInviteRole}>
+                    <SelectTrigger data-testid="select-invite-role">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="user">User</SelectItem>
+                      <SelectItem value="admin">Admin</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
                 {!emailStatus?.configured && (
                   <div className="p-3 bg-amber-50 border border-amber-200 rounded-md text-amber-700 text-sm">
                     Email is not configured. The invitation will be created but you'll need to share the link manually.
@@ -236,7 +251,7 @@ export default function Admin() {
               </div>
               <DialogFooter>
                 <Button
-                  onClick={() => sendInviteMutation.mutate(inviteEmail)}
+                  onClick={() => sendInviteMutation.mutate({ email: inviteEmail, role: inviteRole })}
                   disabled={!inviteEmail || sendInviteMutation.isPending}
                   data-testid="button-confirm-invite"
                 >
@@ -272,6 +287,9 @@ export default function Admin() {
                 </div>
 
                 <div className="flex items-center gap-3">
+                  <Badge variant={invite.role === 'admin' ? 'default' : 'secondary'} className={invite.role === 'admin' ? 'bg-orange-500' : ''}>
+                    {invite.role === 'admin' ? 'Admin' : 'User'}
+                  </Badge>
                   {getStatusBadge(invite.status, invite.expiresAt)}
                   
                   {invite.status === 'pending' && new Date(invite.expiresAt) > new Date() && (

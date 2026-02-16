@@ -49,7 +49,7 @@ export interface IStorage {
   deleteMicrosoftToken(userId: string): Promise<boolean>;
 
   // Invitation operations
-  createInvitation(email: string, invitedBy: string): Promise<Invitation>;
+  createInvitation(email: string, invitedBy: string, role?: string): Promise<Invitation>;
   getInvitationByToken(token: string): Promise<Invitation | undefined>;
   getInvitationByEmail(email: string): Promise<Invitation | undefined>;
   getAllInvitations(): Promise<Invitation[]>;
@@ -235,7 +235,7 @@ export class DatabaseStorage implements IStorage {
   }
 
   // Invitation operations
-  async createInvitation(email: string, invitedBy: string): Promise<Invitation> {
+  async createInvitation(email: string, invitedBy: string, role: string = 'user'): Promise<Invitation> {
     const token = crypto.randomBytes(32).toString('hex');
     const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000); // 7 days
 
@@ -244,6 +244,7 @@ export class DatabaseStorage implements IStorage {
       .values({
         email,
         token,
+        role,
         invitedBy,
         status: 'pending',
         expiresAt,

@@ -21,6 +21,7 @@ const registerSchema = z.object({
 
 const inviteSchema = z.object({
   email: z.string().email(),
+  role: z.enum(["admin", "user"]).default("user"),
 });
 
 export async function registerRoutes(
@@ -86,6 +87,7 @@ export async function registerRoutes(
         username,
         password: hashedPassword,
         displayName,
+        role: invitation.role || 'user',
       });
       
       // Mark invitation as accepted
@@ -409,7 +411,7 @@ export async function registerRoutes(
 
   app.post("/api/admin/invitations", requireAdmin, async (req, res) => {
     try {
-      const { email } = inviteSchema.parse(req.body);
+      const { email, role } = inviteSchema.parse(req.body);
       const user = await getCurrentUser(req);
       
       if (!user) {
@@ -422,7 +424,7 @@ export async function registerRoutes(
         return res.status(400).json({ error: "An invitation has already been sent to this email" });
       }
 
-      const invitation = await storage.createInvitation(email, user.id);
+      const invitation = await storage.createInvitation(email, user.id, role);
 
       // Try to send email
       const emailSent = await sendInvitationEmail(email, invitation.token, user.displayName);

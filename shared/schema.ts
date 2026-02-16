@@ -85,6 +85,7 @@ export const invitations = pgTable("invitations", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   email: text("email").notNull(),
   token: text("token").notNull().unique(),
+  role: text("role").notNull().default("user"), // 'admin' | 'user'
   invitedBy: varchar("invited_by").notNull().references(() => users.id, { onDelete: "cascade" }),
   status: text("status").notNull().default("pending"), // 'pending' | 'accepted' | 'expired'
   expiresAt: timestamp("expires_at").notNull(),
