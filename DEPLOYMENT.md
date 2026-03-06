@@ -36,7 +36,7 @@ In your DigitalOcean database cluster control panel:
 cat > .env << 'EOF'
 DATABASE_URL=postgresql://user:password@your-cluster:25060/it_ops_dashboard?sslmode=require
 SESSION_SECRET=your-random-production-secret-at-least-32-chars
-PORT=5005
+PORT=5003
 RESEND_API_KEY=your-resend-key
 RESEND_FROM_EMAIL=IT Ops Console <noreply@itopsconsole.com>
 APP_URL=https://itopsconsole.com
@@ -99,7 +99,7 @@ server {
     server_name itopsconsole.com;
 
     location / {
-        proxy_pass http://localhost:5005;
+        proxy_pass http://localhost:5003;
         proxy_http_version 1.1;
         proxy_set_header Upgrade $http_upgrade;
         proxy_set_header Connection 'upgrade';
@@ -206,7 +206,7 @@ pm2 monit                   # Real-time monitoring
 |----------|----------|-------------|
 | `DATABASE_URL` | **Yes** | PostgreSQL connection string |
 | `SESSION_SECRET` | **Yes** | Session signing key (min 32 chars, unique per env) |
-| `PORT` | **Yes** | Server port (prod: 5005, staging: 5006) |
+| `PORT` | **Yes** | Server port (prod: 5003, staging: 5006) |
 | `APP_URL` | No | Base URL for email links |
 | `RESEND_API_KEY` | No | Resend API key for sending invitation emails |
 | `RESEND_FROM_EMAIL` | No | From address for emails |

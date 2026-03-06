@@ -9,7 +9,7 @@ alwaysApply: true
 
 | App | Port | URL |
 |-----|------|-----|
-| Production (itops-api) | 5005 | https://itopsconsole.com |
+| Production (itops-api) | 5003 | https://itopsconsole.com |
 | Staging (itops-staging) | 5006 | https://staging.itopsconsole.com |
 
 Nginx proxies each domain to its port. Changing ports breaks the site.
@@ -36,7 +36,7 @@ Nginx proxies each domain to its port. Changing ports breaks the site.
 See `.env.example` for the full list. Key required vars:
 - `DATABASE_URL` — PostgreSQL connection string (different per environment)
 - `SESSION_SECRET` — Random string, min 32 chars (different per environment)
-- `PORT` — 5005 (prod) or 5006 (staging)
+- `PORT` — 5003 (prod) or 5006 (staging)
 
 ## Git Workflow
 

@@ -26,7 +26,7 @@ const envVars = loadEnvFile(path.join(appRoot, '.env'));
 const stagingEnvVars = loadEnvFile(path.join(appRoot, '.env.staging'));
 
 // DO NOT CHANGE: Nginx proxies depend on these ports
-const prodPort = '5005';    // itopsconsole.com
+const prodPort = '5003';    // itopsconsole.com
 const stagingPort = '5006'; // staging.itopsconsole.com
 
 module.exports = {
