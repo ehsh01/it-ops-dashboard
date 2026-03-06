@@ -1,122 +1,215 @@
-# Deploying IT Ops Dashboard to DigitalOcean
+# Deployment Workflow: Local → GitHub → DigitalOcean
 
-## Prerequisites
-- Node.js 18+ on your server
-- Access to your DigitalOcean database cluster
-- Git installed on your server
+## Quick Reference
 
-## 1. Create Database in Your Cluster
+| Step | Where | Command |
+|------|-------|---------|
+| 1. Make changes | Local (Cursor) | Edit code |
+| 2. Build & verify | Local | `npm run build` |
+| 3. Commit & push | Local | `git add -A && git commit -m "..." && git push` |
+| 4. Deploy staging | DigitalOcean | `git pull && npm run build && pm2 restart itops-staging --update-env` |
+| 5. Test staging | Browser | Open `https://staging.itopsconsole.com` |
+| 6. Deploy production | DigitalOcean | `pm2 restart itops-api --update-env` |
 
-In your DigitalOcean control panel:
+---
+
+## Initial Server Setup (One-Time)
+
+### 1. App Already on Server
+
+The app is already cloned and running on the server. You just need to add staging.
+
+### 2. Create Staging Database
+
+In your DigitalOcean database cluster control panel:
 1. Go to **Databases** → Select your cluster
 2. Click **Users & Databases** tab
-3. Create a new database named `it_ops_dashboard`
-4. Note your connection string (you'll need it for the next step)
+3. Create a new database: `it_ops_staging_db`
 
-Your connection string will look like:
-```
-postgresql://username:password@your-cluster-host:25060/it_ops_dashboard?sslmode=require
-```
+(Production database `it_ops_dashboard` already exists.)
 
-## 2. Clone Repository on Your Server
+### 3. Create Environment Files
 
-```bash
-ssh your-server
-
-# Clone the repository
-git clone https://github.com/ehsh01/it-ops-dashboard.git
-cd it-ops-dashboard
-
-# Install dependencies
-npm install
-```
-
-## 3. Configure Environment Variables
-
-Create a `.env` file on your server:
+**Production** (`.env`) — update existing or create:
 
 ```bash
 cat > .env << 'EOF'
-DATABASE_URL=postgresql://username:password@your-cluster-host:25060/it_ops_dashboard?sslmode=require
-NODE_ENV=production
-PORT=5000
+DATABASE_URL=postgresql://user:password@your-cluster:25060/it_ops_dashboard?sslmode=require
+SESSION_SECRET=your-random-production-secret-at-least-32-chars
+PORT=5005
+RESEND_API_KEY=your-resend-key
+RESEND_FROM_EMAIL=IT Ops Console <noreply@itopsconsole.com>
+APP_URL=https://itopsconsole.com
+MICROSOFT_CLIENT_ID=your-client-id
+MICROSOFT_CLIENT_SECRET=your-client-secret
+MICROSOFT_TENANT_ID=your-tenant-id
 EOF
 ```
 
-Replace the `DATABASE_URL` with your actual DigitalOcean database connection string.
-
-## 4. Initialize Database Schema
+**Staging** (`.env.staging`) — new file:
 
 ```bash
+cat > .env.staging << 'EOF'
+DATABASE_URL=postgresql://user:password@your-cluster:25060/it_ops_staging_db?sslmode=require
+SESSION_SECRET=your-random-staging-secret-different-from-prod
+PORT=5006
+RESEND_API_KEY=your-resend-key
+RESEND_FROM_EMAIL=IT Ops Console <noreply@itopsconsole.com>
+APP_URL=https://staging.itopsconsole.com
+MICROSOFT_CLIENT_ID=your-client-id
+MICROSOFT_CLIENT_SECRET=your-client-secret
+MICROSOFT_TENANT_ID=your-tenant-id
+EOF
+```
+
+### 4. Initialize Database Schema
+
+```bash
+# Push schema to production database
 npm run db:push
+
+# Push schema to staging database
+DATABASE_URL="postgresql://...staging_db..." npm run db:push
 ```
 
-This will create all the necessary tables in your DigitalOcean database.
+### 5. Migrate to ecosystem.config.cjs
 
-## 5. Build and Run
+The existing `it-ops-dashboard` PM2 process was started manually. Replace it with the ecosystem config:
 
 ```bash
-# Build the application
+# Stop and remove the old process
+pm2 delete it-ops-dashboard
+
+# Build and start both prod + staging via ecosystem config
 npm run build
+pm2 start ecosystem.config.cjs
 
-# Start in production mode
-npm start
-```
-
-## 6. Run with PM2 (Recommended)
-
-For production, use PM2 to keep the app running:
-
-```bash
-# Install PM2 globally
-npm install -g pm2
-
-# Start the application
-pm2 start npm --name "it-ops-dashboard" -- start
-
-# Save the process list
+# Save process list
 pm2 save
-
-# Set up auto-start on server reboot
-pm2 startup
 ```
 
-## 7. Configure Nginx (Optional)
+### 6. Configure Nginx
 
-If you want to serve the app on port 80/443:
+Add server blocks for both domains:
 
 ```nginx
+# Production: itopsconsole.com
 server {
     listen 80;
-    server_name your-domain.com;
+    server_name itopsconsole.com;
 
     location / {
-        proxy_pass http://localhost:5000;
+        proxy_pass http://localhost:5005;
         proxy_http_version 1.1;
         proxy_set_header Upgrade $http_upgrade;
         proxy_set_header Connection 'upgrade';
         proxy_set_header Host $host;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_cache_bypass $http_upgrade;
+    }
+}
+
+# Staging: staging.itopsconsole.com
+server {
+    listen 80;
+    server_name staging.itopsconsole.com;
+
+    location / {
+        proxy_pass http://localhost:5006;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection 'upgrade';
+        proxy_set_header Host $host;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_set_header X-Real-IP $remote_addr;
         proxy_cache_bypass $http_upgrade;
     }
 }
 ```
 
-## Environment Variables Reference
-
-| Variable | Description | Required |
-|----------|-------------|----------|
-| `DATABASE_URL` | PostgreSQL connection string | Yes |
-| `NODE_ENV` | Set to `production` for deployment | Yes |
-| `PORT` | Server port (default: 5000) | No |
-
-## Updating the App
-
-To pull updates from GitHub:
+Then enable and get SSL:
 
 ```bash
-cd it-ops-dashboard
-git pull origin main
-npm install
-npm run build
-pm2 restart it-ops-dashboard
+sudo nginx -t && sudo systemctl reload nginx
+sudo certbot --nginx -d itopsconsole.com -d staging.itopsconsole.com
 ```
+
+---
+
+## Day-to-Day Deploy Workflow
+
+### Push Code (from Cursor / local)
+
+```bash
+git add -A
+git status          # review changes
+git commit -m "Your change description"
+git push origin main
+```
+
+### Deploy to Staging (SSH into server)
+
+```bash
+cd /var/www/it-ops-dashboard
+git pull
+npm install         # if package.json changed
+npm run build
+pm2 restart itops-staging --update-env
+```
+
+### Test Staging
+
+Open `https://staging.itopsconsole.com` and verify everything works.
+
+### Deploy to Production
+
+If staging looks good:
+
+```bash
+pm2 restart itops-api --update-env
+```
+
+---
+
+## Environment Variable Changes
+
+PM2 `restart` does **NOT** re-read `.env` files — it reuses stored env. When `.env` or `.env.staging` changes:
+
+```bash
+# Staging
+pm2 delete itops-staging && pm2 start ecosystem.config.cjs --only itops-staging
+
+# Production
+pm2 delete itops-api && pm2 start ecosystem.config.cjs --only itops-api
+```
+
+---
+
+## Useful PM2 Commands
+
+```bash
+pm2 list                    # List all apps
+pm2 logs itops-staging      # View staging logs
+pm2 logs itops-api          # View production logs
+pm2 restart itops-staging   # Restart staging
+pm2 restart itops-api       # Restart production
+pm2 stop itops-staging      # Stop staging when not needed
+pm2 monit                   # Real-time monitoring
+```
+
+---
+
+## Environment Variables Reference
+
+| Variable | Required | Description |
+|----------|----------|-------------|
+| `DATABASE_URL` | **Yes** | PostgreSQL connection string |
+| `SESSION_SECRET` | **Yes** | Session signing key (min 32 chars, unique per env) |
+| `PORT` | **Yes** | Server port (prod: 5005, staging: 5006) |
+| `APP_URL` | No | Base URL for email links |
+| `RESEND_API_KEY` | No | Resend API key for sending invitation emails |
+| `RESEND_FROM_EMAIL` | No | From address for emails |
+| `MICROSOFT_CLIENT_ID` | No | Microsoft 365 OAuth app client ID |
+| `MICROSOFT_CLIENT_SECRET` | No | Microsoft 365 OAuth app client secret |
+| `MICROSOFT_TENANT_ID` | No | Microsoft tenant ID (defaults to "common") |

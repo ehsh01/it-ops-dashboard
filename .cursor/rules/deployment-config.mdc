@@ -1,0 +1,45 @@
+---
+description: Deployment config - ports, databases, PM2 behavior (DO NOT CHANGE)
+alwaysApply: true
+---
+
+# IT Ops Dashboard Deployment Config
+
+## Ports (DO NOT CHANGE)
+
+| App | Port | URL |
+|-----|------|-----|
+| Production (itops-api) | 5005 | https://itopsconsole.com |
+| Staging (itops-staging) | 5006 | https://staging.itopsconsole.com |
+
+Nginx proxies each domain to its port. Changing ports breaks the site.
+
+## Databases
+
+- **Production**: `it_ops_dashboard`
+- **Staging**: `it_ops_staging_db`
+
+## PM2
+
+- `pm2 restart` does NOT re-read `.env` — it reuses stored env.
+- When `.env` or `.env.staging` changes: use `pm2 delete <app>` then `pm2 start ecosystem.config.cjs --only <app>`.
+
+## Deploy Steps
+
+1. `git pull && npm install && npm run build`
+2. Staging: `pm2 restart itops-staging --update-env`
+3. Test staging at https://staging.itopsconsole.com
+4. Production: `pm2 restart itops-api --update-env`
+
+## Environment Variables
+
+See `.env.example` for the full list. Key required vars:
+- `DATABASE_URL` — PostgreSQL connection string (different per environment)
+- `SESSION_SECRET` — Random string, min 32 chars (different per environment)
+- `PORT` — 5005 (prod) or 5006 (staging)
+
+## Git Workflow
+
+- Single branch: `main`
+- Push from Cursor → GitHub → pull on server
+- Always deploy to staging first, then production
