@@ -32,7 +32,7 @@ app.use(
         styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
         fontSrc: ["'self'", "https://fonts.gstatic.com"],
         imgSrc: ["'self'", "data:", "https:"],
-        connectSrc: ["'self'", "https://login.microsoftonline.com", "https://graph.microsoft.com"],
+        connectSrc: ["'self'", "https://login.microsoftonline.com", "https://graph.microsoft.com", "https://accounts.google.com", "https://gmail.googleapis.com", "https://www.googleapis.com"],
       },
     },
     crossOriginEmbedderPolicy: false,

@@ -3,6 +3,7 @@ import {
   actionItems, 
   eodTasks,
   microsoftTokens,
+  googleTokens,
   invitations,
   type User, 
   type InsertUser,
@@ -12,6 +13,8 @@ import {
   type InsertEodTask,
   type MicrosoftToken,
   type InsertMicrosoftToken,
+  type GoogleToken,
+  type InsertGoogleToken,
   type Invitation,
   type InsertInvitation
 } from "@shared/schema";
@@ -47,6 +50,12 @@ export interface IStorage {
   saveMicrosoftToken(token: InsertMicrosoftToken): Promise<MicrosoftToken>;
   updateMicrosoftToken(userId: string, updates: Partial<InsertMicrosoftToken>): Promise<MicrosoftToken | undefined>;
   deleteMicrosoftToken(userId: string): Promise<boolean>;
+
+  // Google Token operations
+  getGoogleToken(userId: string): Promise<GoogleToken | undefined>;
+  saveGoogleToken(token: InsertGoogleToken): Promise<GoogleToken>;
+  updateGoogleToken(userId: string, updates: Partial<InsertGoogleToken>): Promise<GoogleToken | undefined>;
+  deleteGoogleToken(userId: string): Promise<boolean>;
 
   // Invitation operations
   createInvitation(email: string, invitedBy: string, role?: string): Promise<Invitation>;
@@ -230,6 +239,46 @@ export class DatabaseStorage implements IStorage {
     const result = await db
       .delete(microsoftTokens)
       .where(eq(microsoftTokens.userId, userId))
+      .returning();
+    return result.length > 0;
+  }
+
+  // Google Token operations
+  async getGoogleToken(userId: string): Promise<GoogleToken | undefined> {
+    const [token] = await db.select().from(googleTokens).where(eq(googleTokens.userId, userId));
+    return token || undefined;
+  }
+
+  async saveGoogleToken(token: InsertGoogleToken): Promise<GoogleToken> {
+    const existing = await this.getGoogleToken(token.userId);
+    if (existing) {
+      const [updated] = await db
+        .update(googleTokens)
+        .set({ ...token, updatedAt: new Date() })
+        .where(eq(googleTokens.userId, token.userId))
+        .returning();
+      return updated;
+    }
+    const [newToken] = await db
+      .insert(googleTokens)
+      .values(token)
+      .returning();
+    return newToken;
+  }
+
+  async updateGoogleToken(userId: string, updates: Partial<InsertGoogleToken>): Promise<GoogleToken | undefined> {
+    const [updated] = await db
+      .update(googleTokens)
+      .set({ ...updates, updatedAt: new Date() })
+      .where(eq(googleTokens.userId, userId))
+      .returning();
+    return updated || undefined;
+  }
+
+  async deleteGoogleToken(userId: string): Promise<boolean> {
+    const result = await db
+      .delete(googleTokens)
+      .where(eq(googleTokens.userId, userId))
       .returning();
     return result.length > 0;
   }

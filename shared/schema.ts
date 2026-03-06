@@ -80,6 +80,22 @@ export const insertMicrosoftTokenSchema = createInsertSchema(microsoftTokens).om
 export type InsertMicrosoftToken = z.infer<typeof insertMicrosoftTokenSchema>;
 export type MicrosoftToken = typeof microsoftTokens.$inferSelect;
 
+// Google OAuth Tokens table
+export const googleTokens = pgTable("google_tokens", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").notNull().references(() => users.id, { onDelete: "cascade" }).unique(),
+  accessToken: text("access_token").notNull(),
+  refreshToken: text("refresh_token").notNull(),
+  expiresAt: timestamp("expires_at").notNull(),
+  scope: text("scope").notNull(),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+});
+
+export const insertGoogleTokenSchema = createInsertSchema(googleTokens).omit({ id: true, createdAt: true, updatedAt: true });
+export type InsertGoogleToken = z.infer<typeof insertGoogleTokenSchema>;
+export type GoogleToken = typeof googleTokens.$inferSelect;
+
 // Invitations table for invitation-only registration
 export const invitations = pgTable("invitations", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),

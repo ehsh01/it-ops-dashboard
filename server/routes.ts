@@ -5,6 +5,7 @@ import { insertActionItemSchema, insertEodTaskSchema } from "@shared/schema";
 import { z } from "zod";
 import { authenticateUser, hashPassword, requireAuth, requireAdmin, getCurrentUser } from "./auth";
 import * as microsoft from "./microsoft";
+import * as google from "./google";
 import { sendInvitationEmail, isEmailConfigured } from "./email";
 
 const loginSchema = z.object({
@@ -668,6 +669,136 @@ export async function registerRoutes(
       const count = parseInt(req.query.count as string) || 20;
       const messages = await microsoft.fetchChatMessages(accessToken, String(req.params.chatId), count);
       res.json(messages);
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // Google OAuth routes
+  app.get("/api/google/status", requireAuth, async (req, res) => {
+    try {
+      const user = await getCurrentUser(req);
+      if (!user) {
+        return res.status(401).json({ error: "Not authenticated" });
+      }
+
+      const configured = google.isConfigured();
+      const token = await storage.getGoogleToken(user.id);
+
+      res.json({
+        configured,
+        connected: !!token,
+        expiresAt: token?.expiresAt || null,
+      });
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  app.get("/api/google/authorize", requireAuth, async (req, res) => {
+    try {
+      if (!google.isConfigured()) {
+        return res.status(400).json({ error: "Google integration not configured" });
+      }
+
+      const user = await getCurrentUser(req);
+      if (!user) {
+        return res.status(401).json({ error: "Not authenticated" });
+      }
+
+      const state = Buffer.from(JSON.stringify({ userId: user.id })).toString("base64");
+      const authUrl = google.getAuthorizationUrl(req, state);
+
+      res.json({ authUrl });
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  app.get("/api/google/callback", async (req, res) => {
+    try {
+      const { code, state, error } = req.query;
+
+      if (error) {
+        return res.redirect("/integrations?error=" + encodeURIComponent(error as string));
+      }
+
+      if (!code || !state) {
+        return res.redirect("/integrations?error=missing_parameters");
+      }
+
+      const stateData = JSON.parse(Buffer.from(state as string, "base64").toString());
+      const userId = stateData.userId;
+
+      const tokens = await google.exchangeCodeForTokens(req, code as string);
+      const expiresAt = new Date(Date.now() + tokens.expiresIn * 1000);
+
+      await storage.saveGoogleToken({
+        userId,
+        accessToken: tokens.accessToken,
+        refreshToken: tokens.refreshToken,
+        expiresAt,
+        scope: tokens.scope,
+      });
+
+      res.redirect("/integrations?success=google_connected");
+    } catch (error: any) {
+      console.error("Google OAuth callback error:", error);
+      res.redirect("/integrations?error=" + encodeURIComponent(error.message));
+    }
+  });
+
+  app.delete("/api/google/disconnect", requireAuth, async (req, res) => {
+    try {
+      const user = await getCurrentUser(req);
+      if (!user) {
+        return res.status(401).json({ error: "Not authenticated" });
+      }
+
+      await storage.deleteGoogleToken(user.id);
+      res.json({ success: true });
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  app.get("/api/google/emails", requireAuth, async (req, res) => {
+    try {
+      const user = await getCurrentUser(req);
+      if (!user) {
+        return res.status(401).json({ error: "Not authenticated" });
+      }
+
+      const accessToken = await google.getValidAccessToken(user.id);
+      if (!accessToken) {
+        return res.status(401).json({ error: "Google not connected or token expired" });
+      }
+
+      const count = parseInt(req.query.count as string) || 20;
+      const emails = await google.fetchGmailEmails(accessToken, count);
+
+      res.json(emails);
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  app.get("/api/google/calendar/events", requireAuth, async (req, res) => {
+    try {
+      const user = await getCurrentUser(req);
+      if (!user) {
+        return res.status(401).json({ error: "Not authenticated" });
+      }
+
+      const accessToken = await google.getValidAccessToken(user.id);
+      if (!accessToken) {
+        return res.status(401).json({ error: "Google not connected or token expired" });
+      }
+
+      const days = parseInt(req.query.days as string) || 1;
+      const events = await google.fetchCalendarEvents(accessToken, days);
+
+      res.json(events);
     } catch (error: any) {
       res.status(500).json({ error: error.message });
     }
